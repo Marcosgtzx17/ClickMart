@@ -59,11 +59,4 @@ namespace ClickMart.Entidades
     }
 
     // Sombra mínima para la navegación; reemplaza por tu entidad real.
-    public class Producto
-    {
-        // Clave y otras props irían aquí; se define solo para compilar navegaciones.
-        public string ProductoId { get; set; } = null!;
-        public string? IdDistribuidor { get; set; }
-        public virtual Distribuidor? Distribuidor { get; set; }
-    }
 }

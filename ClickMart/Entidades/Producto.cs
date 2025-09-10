@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClickMart.Entidades
 {
-    [Table("productos")]
     public class Producto
     {
         [Key]

@@ -7,45 +7,32 @@ namespace ClickMart.Entidades
     [Table("detalle_pedidos")]
     public class DetallePedido
     {
-        // ====== Clave primaria ======
         [Key]
         [Column("DETALLE_ID")]
         public int DetalleId { get; set; }
 
-        // ====== Claves foráneas ======
-        [Column("ID_PEDIDO")]
-        public int? IdPedido { get; set; }
-
-        [Column("ID_PRODUCTO")]
-        [StringLength(10)]
-        public string? IdProducto { get; set; }
-
-        // ====== Datos obligatorios ======
-        [Column("CANTIDAD")]
+        // FK a Pedido
         [Required]
+        [Column("ID_PEDIDO")]
+        public int IdPedido { get; set; }
+        [ForeignKey("IdPedido")]
+        public Pedido Pedido { get; set; } = null!;
+
+        // FK a Producto
+        [Required]
+        [Column("ID_PRODUCTO")]
+        public int IdProducto { get; set; }
+        [ForeignKey("IdProducto")]
+        public Producto Producto { get; set; } = null!;
+
+        [Required]
+        [Column("CANTIDAD")]
         public int Cantidad { get; set; }
 
-        [Column("SUBTOTAL")]
-        public double? Subtotal { get; set; }
-
-        // ====== Navegaciones ======
-        public virtual Pedido? Pedido { get; set; }
-        public virtual Producto? Producto { get; set; }
-
-        // Azúcar para debugging / logging
-        public override string ToString()
-            => $"Detalle #{DetalleId}: Pedido={IdPedido}, Producto={IdProducto}, Cantidad={Cantidad}, Subtotal={Subtotal?.ToString("C") ?? "N/A"}";
+        [Required]
+        [Column("SUBTOTAL", TypeName = "decimal(18,2)")]
+        public decimal Subtotal { get; set; }
     }
 
-    // Placeholders mínimos para navegaciones
-    public class Pedido
-    {
-        public int PedidoId { get; set; }
-    }
-
-    public class Productos
-    {
-        public string ProductoId { get; set; } = null!;
-    }
 }
 
