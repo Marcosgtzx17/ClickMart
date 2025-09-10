@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClickMart.Entidades
 {
-    public class Producto
+    [Table("productos")]
+    public class Productos
     {
         [Key]
         [Column("PRODUCTO_ID")]

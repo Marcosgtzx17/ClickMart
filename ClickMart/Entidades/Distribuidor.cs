@@ -8,55 +8,49 @@ namespace ClickMart.Entidades
     {
         public Distribuidor()
         {
-            // Inicializa la navegación para evitar null refs en tiempo de ejecución.
-            Productos = new HashSet<Producto>();
+            Productos = new HashSet<Productos>();
         }
 
         // ====== Clave primaria ======
         [Key]
         [Column("DISTRIBUIDOR_ID")]
-        [Required]
-        [StringLength(5)]
-        public string DistribuidorId { get; set; } = null!;
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int DistribuidorId { get; set; }
 
-        // ====== Campos obligatorios según DDL ======
-        [Column("NOMBRE")]
+        // ====== Campos obligatorios ======
         [Required]
         [StringLength(50)]
-        public string Nombre { get; set; } = null!;
+        [Column("NOMBRE")]
+        public string Nombre { get; set; } = string.Empty;
 
-        [Column("DIRECCION")]
         [Required]
         [StringLength(100)]
-        public string Direccion { get; set; } = null!;
+        [Column("DIRECCION")]
+        public string Direccion { get; set; } = string.Empty;
 
-        [Column("TELEFONO")]
         [Required]
         [StringLength(9)]
-        public string Telefono { get; set; } = null!;
+        [Column("TELEFONO")]
+        public string Telefono { get; set; } = string.Empty;
 
-        [Column("GMAIL")]
         [Required]
         [StringLength(50)]
-        public string Gmail { get; set; } = null!;
+        [Column("GMAIL")]
+        public string Gmail { get; set; } = string.Empty;
 
-        [Column("DESCRIPCION")]
         [Required]
         [StringLength(100)]
-        public string Descripcion { get; set; } = null!;
+        [Column("DESCRIPCION")]
+        public string Descripcion { get; set; } = string.Empty;
 
-        [Column("FECHA_REGISTRO", TypeName = "date")]
         [Required]
+        [Column("FECHA_REGISTRO", TypeName = "date")]
         public DateTime FechaRegistro { get; set; }
 
-        // ====== Navegación (1:N) con productos ======
-        // FK en productos: ID_DISTRIBUIDOR -> DISTRIBUIDOR_ID
-        public virtual ICollection<Producto> Productos { get; set; }
+        // ====== Relación 1:N con Productos ======
+        public virtual ICollection<Productos> Productos { get; set; }
 
-        // Opcional: azúcar sintáctico para debugging / logging
         public override string ToString()
             => $"{DistribuidorId} - {Nombre} ({Telefono})";
     }
-
-    // Sombra mínima para la navegación; reemplaza por tu entidad real.
 }

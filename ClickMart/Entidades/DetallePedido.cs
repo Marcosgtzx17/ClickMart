@@ -23,7 +23,7 @@ namespace ClickMart.Entidades
         [Column("ID_PRODUCTO")]
         public int IdProducto { get; set; }
         [ForeignKey("IdProducto")]
-        public Producto Producto { get; set; } = null!;
+        public Productos Producto { get; set; } = null!;
 
         [Required]
         [Column("CANTIDAD")]
