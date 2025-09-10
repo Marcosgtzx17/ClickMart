@@ -1,26 +1,43 @@
-﻿using System;
+﻿
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClickMart.Entidades
 {
+    
+    [Table("reseñas")]
     public class Resena
     {
         [Key]
-        public int RESENA_ID { get; set; }
+        [Column("RESEÑA_ID")]
+        public int ResenaId { get; set; }
 
         [Required]
-        public int USUARIO_ID { get; set; }
+        [Column("USUARIO_ID")]
+        public int UsuarioId { get; set; }
 
+        
         [Required]
-        public int PRODUCTO_ID { get; set; }
+        [MaxLength(10)]
+        [Column("PRODUCTO_ID")]
+        public string ProductoId { get; set; } = string.Empty;
 
+      
         [Range(1, 5)]
-        public int calificacion { get; set; }
+        [Column("calificacion")]
+        public byte Calificacion { get; set; }
 
-        [MaxLength(1000)]
-        public string comentario { get; set; }
+      
+        [Column("comentario", TypeName = "TEXT")]
+        public string? Comentario { get; set; }
 
-        public DateTime fecha_resena { get; set; }
+        [Column("fecha_reseña")]
+        public DateTime FechaResena { get; set; }
+
+        [ForeignKey(nameof(UsuarioId))]
+        public virtual Usuario? Usuario { get; set; }
+
+        [ForeignKey(nameof(ProductoId))]
+        public virtual Productos? Producto { get; set; }
     }
 }
