@@ -34,6 +34,10 @@ namespace ClickMart.Entidades
         [Column("STOCK")]
         public int? Stock { get; set; }
 
+        [Column("IMAGEN_ALT")]
+        [StringLength(120)]
+        public string? ImagenAlt { get; set; }
+
         // ======= Relaciones =======
 
         [Column("ID_CATEGORIA")]

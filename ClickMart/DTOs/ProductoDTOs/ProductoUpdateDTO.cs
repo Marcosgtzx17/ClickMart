@@ -8,6 +8,7 @@
         public decimal Precio { get; set; }
         public string? Marca { get; set; }
         public int? Stock { get; set; }
+        public string? ImagenAlt { get; set; }
         public int? CategoriaId { get; set; }
         public int? DistribuidorId { get; set; }
     }
