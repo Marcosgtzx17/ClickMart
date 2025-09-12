@@ -32,6 +32,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Folder Include="certs\" />
 		<Folder Include="Servicios\" />
 	</ItemGroup>
 
