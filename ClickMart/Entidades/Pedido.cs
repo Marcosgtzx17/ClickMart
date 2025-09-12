@@ -39,8 +39,7 @@ namespace ClickMart.Entidades
         [StringLength(4)]
         public string? TarjetaUltimos4 { get; set; }
 
-        [Column("PAGO_FECHA")]
-        public DateTime? PagoFecha { get; set; }
+       
     }
 
     public enum MetodoPago
