@@ -12,9 +12,39 @@ namespace ClickMart.Repositorios
         public DbSet<Usuario> Usuarios { get; set; } = null!;
         public DbSet<Rol> Roles { get; set; } = null!;
         public DbSet<CategoriaProducto> CategoriasProducto { get; set; } = null!;
+        public DbSet<Distribuidor> Distribuidores { get; set; } = null!;
+        public DbSet<Productos> Productos { get; set; } = null!;
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Distribuidor>(entity =>
+            {
+                entity.ToTable("distribuidores");
+                entity.HasKey(e => e.DistribuidorId);
+
+                // Opcional: longitudes
+                entity.Property(e => e.Nombre).HasMaxLength(120);
+                entity.Property(e => e.Direccion).HasMaxLength(200);
+                entity.Property(e => e.Telefono).HasMaxLength(20);
+                entity.Property(e => e.Gmail).HasMaxLength(120);
+                entity.Property(e => e.Descripcion).HasMaxLength(250);
+
+                // Índice único sugerido para Gmail (si tu DB lo permite)
+                entity.HasIndex(e => e.Gmail).IsUnique();
+            });
+
+            modelBuilder.Entity<Productos>(entity =>
+            {
+                entity.ToTable("productos");
+                entity.HasKey(e => e.ProductoId);
+
+                entity.HasOne(p => p.Distribuidor)
+                      .WithMany(d => d.Productos)
+                      .HasForeignKey(p => p.DistribuidorId)
+                      .OnDelete(DeleteBehavior.SetNull); // evita borrado en cascada no deseado
+            });
+
             base.OnModelCreating(modelBuilder);
 
             // Email único en usuarios
