@@ -29,8 +29,8 @@ builder.Services.AddScoped<ICategoriaProductoRepository, CategoriaProductoReposi
 builder.Services.AddScoped<ICategoriaProductoService,    CategoriaProductoService>();
 builder.Services.AddScoped<IDistribuidorRepository, DistribuidorRepository>();
 builder.Services.AddScoped<IDistribuidorService, DistribuidorService>();
-// builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
-// builder.Services.AddScoped<IProductoService,    ProductoService>();
+builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
+builder.Services.AddScoped<IProductoService,    ProductoService>();
 
 // =======================
 // JWT Bearer
