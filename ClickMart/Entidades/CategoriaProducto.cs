@@ -8,6 +8,7 @@ namespace ClickMart.Entidades
     {
         [Key]
         [Column("CATEGORIA_ID")]
+       // [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CategoriaId { get; set; }
 
         [Required]

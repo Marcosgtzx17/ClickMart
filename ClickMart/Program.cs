@@ -1,6 +1,7 @@
 using System.Text;
 using ClickMart.Interfaces;
-using ClickMart.Repositorios;   // AppDbContext, UsuarioRepository   
+using ClickMart.Repositorios;   // AppDbContext, UsuarioRepository
+using ClickMart.Servicios;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -24,10 +25,8 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 // =======================
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IAuthService, AuthRepository>();
-
-// (descomenta cuando tengas estos repos/servicios listos)
-// builder.Services.AddScoped<ICategoriaProductoRepository, CategoriaProductoRepository>();
-// builder.Services.AddScoped<ICategoriaProductoService,    CategoriaProductoService>();
+builder.Services.AddScoped<ICategoriaProductoRepository, CategoriaProductoRepository>();
+builder.Services.AddScoped<ICategoriaProductoService,    CategoriaProductoService>();
 // builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
 // builder.Services.AddScoped<IProductoService,    ProductoService>();
 
