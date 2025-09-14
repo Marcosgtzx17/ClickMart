@@ -1,4 +1,3 @@
-using System.Text;
 using ClickMart.Interfaces;
 using ClickMart.Repositorios;   // AppDbContext, UsuarioRepository
 using ClickMart.Servicios;
@@ -6,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,12 +26,16 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IAuthService, AuthRepository>();
 builder.Services.AddScoped<ICategoriaProductoRepository, CategoriaProductoRepository>();
-builder.Services.AddScoped<ICategoriaProductoService,    CategoriaProductoService>();
+builder.Services.AddScoped<ICategoriaProductoService, CategoriaProductoService>();
 builder.Services.AddScoped<IDistribuidorRepository, DistribuidorRepository>();
 builder.Services.AddScoped<IDistribuidorService, DistribuidorService>();
 builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
-builder.Services.AddScoped<IProductoService,    ProductoService>();
+builder.Services.AddScoped<IProductoService, ProductoService>();
+// Reseñas
+builder.Services.AddScoped<IResenaRepository, ResenaRepository>();
+builder.Services.AddScoped<IResenaService, ResenaService>();
 
+//hvnfcfcggngvg
 // =======================
 // JWT Bearer
 // =======================
