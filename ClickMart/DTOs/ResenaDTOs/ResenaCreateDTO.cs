@@ -7,16 +7,16 @@ namespace ClickMart.DTOs.ResenaDTOs
         [Required]
         public int UsuarioId { get; set; }
 
-        
-        [Required, MaxLength(10)]
-        public string ProductoId { get; set; } = string.Empty;
+        [Required]
+        public int ProductoId { get; set; }
 
-        
-        [Range(1, 5)]
-        public byte Calificacion { get; set; }
+        [Required, Range(1, 5)]
+        public int Calificacion { get; set; }
 
-        
         [MaxLength(1000)]
         public string? Comentario { get; set; }
+
+        // Opcional: si no lo envías, se pone UtcNow en el servicio
+        public DateTime? FechaResena { get; set; }
     }
 }
