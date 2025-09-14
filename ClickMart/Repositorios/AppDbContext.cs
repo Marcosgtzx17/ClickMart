@@ -14,6 +14,7 @@ namespace ClickMart.Repositorios
         public DbSet<CategoriaProducto> CategoriasProducto { get; set; } = null!;
         public DbSet<Distribuidor> Distribuidores { get; set; } = null!;
         public DbSet<Productos> Productos { get; set; } = null!;
+        public DbSet<Resena> Reseñas { get; set; } = null!; // tabla con ñ
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -76,6 +77,20 @@ namespace ClickMart.Repositorios
                 entity.ToTable("categoria_productos");
                 entity.HasKey(e => e.CategoriaId);
                 entity.Property(e => e.Nombre).HasMaxLength(120).IsRequired();
+            });
+            modelBuilder.Entity<Resena>(entity =>
+            {
+                entity.ToTable("reseñas");                       // tabla con ñ
+                entity.HasKey(r => r.ResenaId);
+                entity.Property(r => r.ResenaId).HasColumnName("RESEÑA_ID");
+                entity.Property(r => r.UsuarioId).HasColumnName("USUARIO_ID").IsRequired();
+                entity.Property(r => r.ProductoId).HasColumnName("PRODUCTO_ID").IsRequired();
+                entity.Property(r => r.Calificacion).HasColumnName("calificacion").IsRequired();
+                entity.Property(r => r.Comentario).HasColumnName("comentario").HasColumnType("TEXT");
+                entity.Property(r => r.FechaResena).HasColumnName("fecha_reseña").IsRequired();
+
+                entity.HasOne(r => r.Usuario).WithMany().HasForeignKey(r => r.UsuarioId);
+                entity.HasOne(r => r.Producto).WithMany().HasForeignKey(r => r.ProductoId);
             });
         }
     }
