@@ -1,4 +1,6 @@
-﻿namespace ClickMart.DTOs.UsuariosDTOs
+﻿using System.Text.Json.Serialization;
+
+namespace ClickMart.DTOs.UsuariosDTOs
 {
     public class UsuarioRegistroDTO
     {
@@ -11,6 +13,6 @@
         public string Password { get; set; } = string.Empty;
 
         // Si no viene, asignamos un rol por defecto (ej. 2 = "Usuario")
-        public int? RolId { get; set; }
+        [JsonIgnore] public int? RolId { get; set; }
     }
 }

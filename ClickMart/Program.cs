@@ -24,6 +24,7 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 // DI (Repos/Servicios)
 // =======================
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IAuthService, AuthRepository>();
 builder.Services.AddScoped<ICategoriaProductoRepository, CategoriaProductoRepository>();
 builder.Services.AddScoped<ICategoriaProductoService, CategoriaProductoService>();

@@ -43,5 +43,22 @@ namespace ClickMart.Repositorios
                   Rol = u.Rol?.Nombre ?? "Usuario",
             }).ToList();
         }
+        public async Task<Usuario?> GetByIdAsync(int id)
+         => await _context.Usuarios.Include(u => u.Rol)
+                                   .FirstOrDefaultAsync(u => u.UsuarioId == id);
+
+        public async Task<bool> UpdateAsync(Usuario usuario)
+        {
+            _context.Usuarios.Update(usuario);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var existing = await _context.Usuarios.FindAsync(id);
+            if (existing is null) return false;
+            _context.Usuarios.Remove(existing);
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
 }
