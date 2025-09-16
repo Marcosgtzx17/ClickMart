@@ -16,6 +16,10 @@ namespace ClickMart.Repositorios
         public DbSet<Productos> Productos { get; set; } = null!;
         public DbSet<Resena> Reseñas { get; set; } = null!; // tabla con ñ
 
+        public DbSet<Pedido> Pedidos { get; set; } = null!;
+        public DbSet<DetallePedido> DetallePedidos { get; set; } = null!;
+        public DbSet<CodigoConfirmacion> CodigosConfirmacion { get; set; } = null!;
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -91,6 +95,79 @@ namespace ClickMart.Repositorios
 
                 entity.HasOne(r => r.Usuario).WithMany().HasForeignKey(r => r.UsuarioId);
                 entity.HasOne(r => r.Producto).WithMany().HasForeignKey(r => r.ProductoId);
+            });
+
+            // Pedido
+            // Pedido
+            modelBuilder.Entity<Pedido>(entity =>
+            {
+                entity.ToTable("pedidos");
+                entity.HasKey(p => p.PedidoId);
+
+                // === Conversión enum <-> string (FIX del 500) ===
+                entity.Property(p => p.MetodoPago)
+                      .HasConversion<string>()            // guarda/lee strings (EFECTIVO/TARJETA)
+                      .HasMaxLength(20)
+                      .HasColumnName("METODO_PAGO");
+
+                entity.Property(p => p.PagoEstado)
+                      .HasConversion<string>()            // guarda/lee strings (PENDIENTE/PAGADO)
+                      .HasMaxLength(20)
+                      .HasColumnName("PAGO_ESTADO");
+
+                // (Opcional) explícita nombres/tipos si quieres alinear con tu DDL
+                entity.Property(p => p.PedidoId).HasColumnName("PEDIDO_ID");
+                entity.Property(p => p.UsuarioId).HasColumnName("ID_USUARIO");
+                entity.Property(p => p.Total).HasColumnName("TOTAL").HasColumnType("decimal(10,2)");
+                entity.Property(p => p.Fecha).HasColumnName("FECHA");
+                entity.Property(p => p.TarjetaUltimos4).HasColumnName("TARJETA_ULTIMOS4").HasMaxLength(4);
+
+                entity.HasOne(p => p.Usuario)
+                      .WithMany()
+                      .HasForeignKey(p => p.UsuarioId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+
+
+            // DetallePedido
+            modelBuilder.Entity<DetallePedido>(entity =>
+            {
+                entity.ToTable("detalle_pedidos");
+                entity.HasKey(d => d.DetalleId);
+
+
+                entity.HasOne(d => d.Pedido)
+                .WithMany() // si prefieres, agrega ICollection<DetallePedido> en Pedido
+                .HasForeignKey(d => d.IdPedido)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+                entity.HasOne(d => d.Producto)
+                .WithMany()
+                .HasForeignKey(d => d.IdProducto)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+
+            modelBuilder.Entity<CodigoConfirmacion>(entity =>
+            {
+                entity.ToTable("CodigoConfirmacion");
+                entity.HasKey(c => c.IdCodigo);
+
+                entity.Property(c => c.IdCodigo).HasColumnName("id_codigo");
+                entity.Property(c => c.Email).HasColumnName("Email").HasMaxLength(100).IsRequired();
+                entity.Property(c => c.Codigo).HasColumnName("Codigo").HasMaxLength(50).IsRequired();
+
+                entity.Property(c => c.FechaGeneracion)
+                      .HasColumnName("fecha_generacion")   // <-- ¡AQUÍ también!
+                      .IsRequired();
+
+                entity.Property(c => c.Usado)
+                      .HasColumnName("Usado")
+                      .HasDefaultValue(0);
+
+                entity.HasIndex(c => c.Email);
             });
         }
     }
