@@ -42,6 +42,7 @@ namespace ClickMart.Entidades
         // Campo temporal para validar Luhn
         [NotMapped]
         public string? NumeroTarjeta { get; set; }
+
     }
 
     public enum MetodoPago

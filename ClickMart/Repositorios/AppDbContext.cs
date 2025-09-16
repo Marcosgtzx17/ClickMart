@@ -138,24 +138,22 @@ namespace ClickMart.Repositorios
 
 
 
-            // DetallePedido
-            modelBuilder.Entity<DetallePedido>(entity =>
+            // DetallePedido -> Productos (FK: IdProducto -> ProductoId)
+            modelBuilder.Entity<DetallePedido>(e =>
             {
-                entity.ToTable("detalle_pedidos");
-                entity.HasKey(d => d.DetalleId);
+                e.ToTable("detalle_pedidos");
 
+                e.HasOne(d => d.Producto)
+                 .WithMany()                       // si tu modelo Productos no tiene ICollection<DetallePedido>
+                 .HasForeignKey(d => d.IdProducto)
+                 .HasPrincipalKey(p => p.ProductoId);
 
-                entity.HasOne(d => d.Pedido)
-                .WithMany() // si prefieres, agrega ICollection<DetallePedido> en Pedido
-                .HasForeignKey(d => d.IdPedido)
-                .OnDelete(DeleteBehavior.Cascade);
-
-
-                entity.HasOne(d => d.Producto)
-                .WithMany()
-                .HasForeignKey(d => d.IdProducto)
-                .OnDelete(DeleteBehavior.Restrict);
+                e.HasOne(d => d.Pedido)
+                 .WithMany()                       // idem, si no tienes ICollection<DetallePedido> en Pedido
+                 .HasForeignKey(d => d.IdPedido)
+                 .HasPrincipalKey(p => p.PedidoId);
             });
+
 
 
             modelBuilder.Entity<CodigoConfirmacion>(entity =>

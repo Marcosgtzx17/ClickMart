@@ -16,6 +16,7 @@ namespace ClickMart.Servicios
             _detRepo = detRepo;
         }
 
+        // ======== Lecturas con DTOs ========
         public async Task<List<PedidoResponseDTO>> GetAllAsync() =>
             (await _repo.GetAllAsync()).Select(ToDto).ToList();
 
@@ -25,12 +26,13 @@ namespace ClickMart.Servicios
             return e is null ? null : ToDto(e);
         }
 
+        // ======== Comandos con DTOs ========
         public async Task<PedidoResponseDTO> CreateAsync(PedidoCreateDTO dto)
         {
             var entity = new Pedido
             {
                 UsuarioId = dto.UsuarioId,
-                Total = 0m, // ← inicia en 0; se recalcula con DetallePedido
+                Total = 0m, // inicia en 0; se recalcula con los detalles
                 Fecha = dto.Fecha,
                 MetodoPago = dto.MetodoPago,
                 PagoEstado = dto.PagoEstado,
@@ -65,13 +67,31 @@ namespace ClickMart.Servicios
 
         public Task<bool> DeleteAsync(int id) => _repo.DeleteAsync(id);
 
-        public async Task<bool> RecalcularTotalAsync(int pedidoId)
+        public async Task<decimal> RecalcularTotalAsync(int pedidoId)
         {
-            var pedido = await _repo.GetByIdAsync(pedidoId);
-            if (pedido is null) return false;
+            // Detalles con Producto (precio disponible)
             var detalles = await _detRepo.GetByPedidoAsync(pedidoId);
-            pedido.Total = detalles.Sum(d => d.Subtotal);
-            return await _repo.UpdateAsync(pedido);
+
+            decimal total = 0m;
+            foreach (var d in detalles)
+            {
+                var precio = d.Producto?.Precio ?? 0m;
+                var sub = precio * d.Cantidad;
+
+                // si tienes columna SUBTOTAL y quieres persistirla:
+                d.Subtotal = sub;
+                await _detRepo.UpdateAsync(d);
+
+                total += sub;
+            }
+
+            var pedido = await _repo.GetByIdAsync(pedidoId)
+                         ?? throw new InvalidOperationException("Pedido no encontrado.");
+
+            pedido.Total = total;
+            await _repo.UpdateAsync(pedido);
+
+            return total;
         }
 
         public async Task<bool> MarcarPagadoAsync(int pedidoId)

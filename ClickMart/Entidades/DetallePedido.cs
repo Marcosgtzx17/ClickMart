@@ -25,13 +25,13 @@ namespace ClickMart.Entidades
         [ForeignKey("IdProducto")]
         public Productos Producto { get; set; } = null!;
 
+
         [Required]
         [Column("CANTIDAD")]
         public int Cantidad { get; set; }
 
-        [Required]
         [Column("SUBTOTAL", TypeName = "decimal(18,2)")]
-        public decimal Subtotal { get; set; }
+        public decimal? Subtotal { get; set; }
     }
 
 }

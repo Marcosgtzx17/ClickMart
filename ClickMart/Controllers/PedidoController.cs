@@ -70,9 +70,18 @@ namespace ClickMart.Api.Controllers
         [HttpPost("{id:int}/recalcular-total")]
         public async Task<IActionResult> RecalcularTotal(int id)
         {
-            var ok = await _pedidos.RecalcularTotalAsync(id);
-            return ok ? NoContent() : NotFound();
+            try
+            {
+                var total = await _pedidos.RecalcularTotalAsync(id); // decimal
+                return Ok(new { pedidoId = id, total });
+            }
+            catch (InvalidOperationException)
+            {
+                // Por si el servicio lanza "Pedido no encontrado."
+                return NotFound();
+            }
         }
+
 
         // POST /api/pedido/123/generar-codigo
         [HttpPost("{id:int}/generar-codigo")]
