@@ -9,5 +9,9 @@ namespace ClickMart.Interfaces
         Task<ProductoResponseDTO> CreateAsync(ProductoCreateDTO dto);
         Task<bool> UpdateAsync(int id, ProductoUpdateDTO dto);
         Task<bool> DeleteAsync(int id);
+
+       
+        Task<bool> SubirImagenAsync(int idProducto, byte[] bytes);
+        Task<byte[]?> ObtenerImagenAsync(int idProducto);
     }
 }

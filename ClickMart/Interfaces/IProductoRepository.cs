@@ -9,5 +9,7 @@ namespace ClickMart.Interfaces
         Task<Productos> AddAsync(Productos entity);
         Task<bool> UpdateAsync(Productos entity);
         Task<bool> DeleteAsync(int id);
+        Task<bool> UpdateImagenAsync(int idProducto, byte[]? imagen);
+        Task<byte[]?> GetImagenAsync(int idProducto);
     }
 }
