@@ -13,7 +13,8 @@ namespace ClickMart.Repositorios
             await _ctx.Set<Productos>().AsNoTracking().ToListAsync();
 
         public async Task<Productos?> GetByIdAsync(int id) =>
-            await _ctx.Set<Productos>().FindAsync(id);
+            await _ctx.Set<Productos>().AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ProductoId == id);
 
         public async Task<Productos> AddAsync(Productos entity)
         {
@@ -34,6 +35,24 @@ namespace ClickMart.Repositorios
             if (existing is null) return false;
             _ctx.Set<Productos>().Remove(existing);
             return await _ctx.SaveChangesAsync() > 0;
+        }
+
+        // ===== Imagen (BLOB) =====
+        public async Task<bool> UpdateImagenAsync(int idProducto, byte[]? imagen)
+        {
+            var prod = await _ctx.Set<Productos>().FindAsync(idProducto);
+            if (prod is null) return false;
+            prod.Imagen = imagen;
+            return await _ctx.SaveChangesAsync() > 0;
+        }
+
+        public async Task<byte[]?> GetImagenAsync(int idProducto)
+        {
+            return await _ctx.Set<Productos>()
+                .AsNoTracking()
+                .Where(p => p.ProductoId == idProducto)
+                .Select(p => p.Imagen)
+                .FirstOrDefaultAsync();
         }
     }
 }

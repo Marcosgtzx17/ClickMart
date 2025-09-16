@@ -19,6 +19,8 @@ namespace ClickMart.Repositorios
         public DbSet<Pedido> Pedidos { get; set; } = null!;
         public DbSet<DetallePedido> DetallePedidos { get; set; } = null!;
         public DbSet<CodigoConfirmacion> CodigosConfirmacion { get; set; } = null!;
+
+
         
 
 
@@ -49,6 +51,11 @@ namespace ClickMart.Repositorios
                       .WithMany(d => d.Productos)
                       .HasForeignKey(p => p.DistribuidorId)
                       .OnDelete(DeleteBehavior.SetNull); // evita borrado en cascada no deseado
+
+                entity.Property(p => p.Imagen)
+                .HasColumnName("IMAGEN")
+                 .HasColumnType("LONGBLOB")
+                .IsRequired(false);
             });
 
             base.OnModelCreating(modelBuilder);
