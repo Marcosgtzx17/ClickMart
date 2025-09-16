@@ -1,32 +1,32 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// Entidades/CodigoConfirmacion.cs
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClickMart.Entidades
 {
-    [Table("codigos_confirmacion")]
+    [Table("CodigoConfirmacion")] // nombre EXACTO de tu tabla
     public class CodigoConfirmacion
     {
         [Key]
-        [Column("CODIGO_ID")]
+        [Column("id_codigo")]
         public int IdCodigo { get; set; }
 
         [Required]
-        [MaxLength(100)]
-        [EmailAddress]
-        [Column("email")]
-        public string Email { get; set; } = "";
+        [Column("Email")]
+        [StringLength(100)]
+        public string Email { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(50)]
-        [Column("codigo")]
-        public string Codigo { get; set; } = "";
+        [Column("Codigo")]
+        [StringLength(50)]
+        public string Codigo { get; set; } = string.Empty;
 
         [Required]
-        [Column("fecha_generacion")]
+        [Column("fecha_generacion")] // <-- ¡AQUÍ el cambio! La columna en BD se llama 'Fecha'
         public DateTime FechaGeneracion { get; set; }
 
         [Required]
-        [Column("usado")]
-        public int Usado { get; set; } // 0 = no usado, 1 = usado
+        [Column("Usado")]
+        public int Usado { get; set; } = 0; // 0 = no usado, 1 = usado
     }
 }

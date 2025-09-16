@@ -22,7 +22,7 @@ namespace ClickMart.Entidades
         [Column("TOTAL", TypeName = "decimal(10,2)")]
         public decimal? Total { get; set; }
 
-        [Required] 
+        [Required]
         [Column("FECHA", TypeName = "date")]
         public DateTime Fecha { get; set; }
 
@@ -39,7 +39,9 @@ namespace ClickMart.Entidades
         [StringLength(4)]
         public string? TarjetaUltimos4 { get; set; }
 
-       
+        // Campo temporal para validar Luhn
+        [NotMapped]
+        public string? NumeroTarjeta { get; set; }
     }
 
     public enum MetodoPago
