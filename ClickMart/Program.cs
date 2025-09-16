@@ -39,6 +39,9 @@ builder.Services.AddScoped<IResenaService, ResenaService>();
 builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
 builder.Services.AddScoped<IDetallePedidoRepository, DetallePedidoRepository>();
 builder.Services.AddScoped<ICodigoConfirmacionRepository, CodigoConfirmacionRepository>();
+// Roles
+builder.Services.AddScoped<IRolRepository, RolRepository>();
+builder.Services.AddScoped<IRolService, RolService>();
 
 
 builder.Services.AddScoped<IPedidoService, PedidoService>();
