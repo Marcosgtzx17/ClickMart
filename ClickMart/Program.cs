@@ -35,6 +35,15 @@ builder.Services.AddScoped<IProductoService, ProductoService>();
 // Reseñas
 builder.Services.AddScoped<IResenaRepository, ResenaRepository>();
 builder.Services.AddScoped<IResenaService, ResenaService>();
+// Pedido + Detalle + Código
+builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
+builder.Services.AddScoped<IDetallePedidoRepository, DetallePedidoRepository>();
+builder.Services.AddScoped<ICodigoConfirmacionRepository, CodigoConfirmacionRepository>();
+
+
+builder.Services.AddScoped<IPedidoService, PedidoService>();
+builder.Services.AddScoped<IDetallePedidoService, DetallePedidoService>();
+builder.Services.AddScoped<ICodigoConfirmacionService, CodigoConfirmacionService>();
 
 //hvnfcfcggngvg
 // =======================
