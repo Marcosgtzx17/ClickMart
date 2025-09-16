@@ -34,9 +34,8 @@ namespace ClickMart.Entidades
         [Column("STOCK")]
         public int? Stock { get; set; }
 
-        [Column("IMAGEN_ALT")]
-        [StringLength(120)]
-        public string? ImagenAlt { get; set; }
+        [Column("IMAGEN", TypeName = "LONGBLOB")]
+        public byte[]? Imagen { get; set; }   // ⬅️ mantenemos solo el binario
 
         // ======= Relaciones =======
 
