@@ -15,10 +15,11 @@ namespace ClickMart.Repositorios
         public DbSet<Distribuidor> Distribuidores { get; set; } = null!;
         public DbSet<Productos> Productos { get; set; } = null!;
         public DbSet<Resena> Reseñas { get; set; } = null!; // tabla con ñ
-
+        
         public DbSet<Pedido> Pedidos { get; set; } = null!;
         public DbSet<DetallePedido> DetallePedidos { get; set; } = null!;
         public DbSet<CodigoConfirmacion> CodigosConfirmacion { get; set; } = null!;
+        
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
