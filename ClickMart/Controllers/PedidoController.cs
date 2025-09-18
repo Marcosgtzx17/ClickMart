@@ -2,48 +2,64 @@
 using ClickMart.DTOs.PedidoDTOs;
 using ClickMart.Entidades;
 using ClickMart.Interfaces;
+using ClickMart.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace ClickMart.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Roles = "Cliente,Admin")]
     public class PedidoController : ControllerBase
     {
         private readonly IPedidoService _pedidos;
         private readonly ICodigoConfirmacionService _codigos;
-        private readonly IFacturaService _facturas; // <-- NUEVO
+        private readonly IFacturaService _facturas;
 
-        public PedidoController(
-            IPedidoService pedidos,
-            ICodigoConfirmacionService codigos,
-            IFacturaService facturas) // <-- NUEVO
+        public PedidoController(IPedidoService pedidos, ICodigoConfirmacionService codigos, IFacturaService facturas)
         {
             _pedidos = pedidos;
             _codigos = codigos;
-            _facturas = facturas; // <-- NUEVO
+            _facturas = facturas;
         }
 
-        // GET /api/pedido
+        // SOLO Admin: ver todos
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<List<PedidoResponseDTO>>> GetAll() =>
             Ok(await _pedidos.GetAllAsync());
 
-        // GET /api/pedido/123
+        // Mis pedidos (Cliente) o Admin (todos de un usuario)
+        [HttpGet("mios")]
+        public async Task<ActionResult<List<PedidoResponseDTO>>> GetMine()
+        {
+            var uid = User.GetUserId();
+            if (uid is null) return Unauthorized();
+            return Ok(await _pedidos.GetByUsuarioAsync(uid.Value));
+        }
+
         [HttpGet("{id:int}")]
         public async Task<ActionResult<PedidoResponseDTO>> GetById(int id)
         {
             var dto = await _pedidos.GetByIdAsync(id);
-            return dto is null ? NotFound() : Ok(dto);
+            if (dto is null) return NotFound();
+
+            if (!User.IsAdmin() && User.GetUserId() != dto.UsuarioId) return Forbid();
+            return Ok(dto);
         }
 
-        // POST /api/pedido
         [HttpPost]
         public async Task<ActionResult<PedidoResponseDTO>> Create([FromBody] PedidoCreateDTO dto)
         {
+            // Cliente: ignora el UsuarioId que venga y fuerza el del token
+            if (!User.IsAdmin())
+            {
+                var uid = User.GetUserId();
+                if (uid is null) return Unauthorized();
+                dto.UsuarioId = uid.Value;
+            }
+
             try
             {
                 var created = await _pedidos.CreateAsync(dto);
@@ -55,72 +71,68 @@ namespace ClickMart.Api.Controllers
             }
         }
 
-        // PUT /api/pedido/123
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] PedidoUpdateDTO dto)
         {
+            var current = await _pedidos.GetByIdAsync(id);
+            if (current is null) return NotFound();
+            if (!User.IsAdmin() && User.GetUserId() != current.UsuarioId) return Forbid();
+
             var ok = await _pedidos.UpdateAsync(id, dto);
             return ok ? NoContent() : NotFound();
         }
 
-        // DELETE /api/pedido/123
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
+            var current = await _pedidos.GetByIdAsync(id);
+            if (current is null) return NotFound();
+            if (!User.IsAdmin() && User.GetUserId() != current.UsuarioId) return Forbid();
+
             var ok = await _pedidos.DeleteAsync(id);
             return ok ? NoContent() : NotFound();
         }
 
-        // POST /api/pedido/123/recalcular-total
         [HttpPost("{id:int}/recalcular-total")]
         public async Task<IActionResult> RecalcularTotal(int id)
         {
-            try
-            {
-                var total = await _pedidos.RecalcularTotalAsync(id); // decimal
-                return Ok(new { pedidoId = id, total });
-            }
-            catch (InvalidOperationException)
-            {
-                // Por si el servicio lanza "Pedido no encontrado."
-                return NotFound();
-            }
+            var current = await _pedidos.GetByIdAsync(id);
+            if (current is null) return NotFound();
+            if (!User.IsAdmin() && User.GetUserId() != current.UsuarioId) return Forbid();
+
+            var total = await _pedidos.RecalcularTotalAsync(id);
+            return Ok(new { pedidoId = id, total });
         }
 
-        // POST /api/pedido/123/generar-codigo
         [HttpPost("{id:int}/generar-codigo")]
         public async Task<ActionResult<CodigoConfirmacionResponseDTO>> GenerarCodigoParaPedido(int id)
         {
             var pedido = await _pedidos.GetByIdAsync(id);
             if (pedido is null) return NotFound();
+            if (!User.IsAdmin() && User.GetUserId() != pedido.UsuarioId) return Forbid();
 
             if (pedido.PagoEstado != EstadoPago.PENDIENTE || (pedido.Total ?? 0m) <= 0m)
                 return BadRequest(new { message = "Pedido no listo para generar código." });
 
-            var email =
-                User.FindFirst(ClaimTypes.Email)?.Value
-                ?? User.FindFirst("email")?.Value
-                ?? User.FindFirst("sub")?.Value
-                ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? string.Empty;
-
+            var email = User.FindFirst("email")?.Value
+                     ?? User.FindFirst("sub")?.Value
+                     ?? string.Empty;
             if (string.IsNullOrEmpty(email)) return Unauthorized();
 
             var dto = await _codigos.GenerarAsync(email);
-            return Ok(dto); // En producción: envía por correo y no lo devuelvas.
+            return Ok(dto);
         }
 
-        // POST /api/pedido/123/confirmar
         [HttpPost("{id:int}/confirmar")]
         public async Task<IActionResult> ConfirmarPago(int id, [FromBody] CodigoValidarDTO dto)
         {
-            var email =
-                User.FindFirst(ClaimTypes.Email)?.Value
-                ?? User.FindFirst("email")?.Value
-                ?? User.FindFirst("sub")?.Value
-                ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? string.Empty;
+            var pedido = await _pedidos.GetByIdAsync(id);
+            if (pedido is null) return NotFound();
+            if (!User.IsAdmin() && User.GetUserId() != pedido.UsuarioId) return Forbid();
 
+            var email = User.FindFirst("email")?.Value
+                     ?? User.FindFirst("sub")?.Value
+                     ?? string.Empty;
             if (string.IsNullOrEmpty(email)) return Unauthorized();
 
             var valid = await _codigos.ValidarAsync(email, dto.Codigo);
@@ -130,21 +142,15 @@ namespace ClickMart.Api.Controllers
             return ok ? NoContent() : NotFound();
         }
 
-        // === NUEVO ===
-        // GET /api/pedido/123/factura
         [HttpGet("{id:int}/factura")]
         public async Task<IActionResult> DescargarFactura(int id)
         {
-            // Si quieres exigir que esté pagado, descomenta este bloque:
-            // var pedido = await _pedidos.GetByIdAsync(id);
-            // if (pedido is null) return NotFound();
-            // if (pedido.PagoEstado != EstadoPago.PAGADO)
-            //     return BadRequest(new { message = "El pedido aún no está pagado." });
+            var pedido = await _pedidos.GetByIdAsync(id);
+            if (pedido is null) return NotFound();
+            if (!User.IsAdmin() && User.GetUserId() != pedido.UsuarioId) return Forbid();
 
             var pdf = await _facturas.GenerarFacturaPdfAsync(id);
-            if (pdf is null) return NotFound();
-
-            return File(pdf, "application/pdf", $"Factura_{id}.pdf");
+            return pdf is null ? NotFound() : File(pdf, "application/pdf", $"Factura_{id}.pdf");
         }
     }
 }

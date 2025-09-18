@@ -1,12 +1,12 @@
-using ClickMart.Interfaces;
+﻿using ClickMart.Interfaces;
 using ClickMart.Repositorios;   // AppDbContext, repos
 using ClickMart.Servicios;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http.Features;     // <-- para FormOptions (multipart)
+using Microsoft.AspNetCore.Http.Features;     // FormOptions (multipart)
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using QuestPDF.Infrastructure;               // <-- QuestPDF license
+using QuestPDF.Infrastructure;               // QuestPDF license
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,10 +51,10 @@ builder.Services.AddScoped<ICodigoConfirmacionRepository, CodigoConfirmacionRepo
 builder.Services.AddScoped<ICodigoConfirmacionService, CodigoConfirmacionService>();
 
 // Factura (PDF)
-builder.Services.AddScoped<IFacturaService, FacturaService>();   // <-- NUEVO
+builder.Services.AddScoped<IFacturaService, FacturaService>();
 
 // =======================
-// Uploads (multipart) - �til para im�genes de producto
+// Uploads (multipart)
 // =======================
 builder.Services.Configure<FormOptions>(o =>
 {
@@ -80,9 +80,23 @@ builder.Services
             ValidIssuer = jwt["Issuer"],
             ValidAudience = jwt["Audience"],
             IssuerSigningKey = signingKey,
-            ClockSkew = TimeSpan.FromMinutes(1)
+            ClockSkew = TimeSpan.FromMinutes(1),
+
+            // 👇 NUEVO: para que [Authorize(Roles="Admin")] funcione con tu claim "rol"
+            RoleClaimType = "rol",
+            // 👇 NUEVO (opcional): que User.Identity.Name sea tu "uid"
+            NameClaimType = "uid"
         };
     });
+
+// =======================
+// Autorización (opcional, pero cómodo)
+// =======================
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", p => p.RequireRole("Admin"));
+    options.AddPolicy("ClienteOrAdmin", p => p.RequireRole("Cliente", "Admin"));
+});
 
 // =======================
 // Controllers + Swagger

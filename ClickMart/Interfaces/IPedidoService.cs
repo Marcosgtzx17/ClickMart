@@ -14,5 +14,7 @@ namespace ClickMart.Interfaces
         // 🔄 Recalcular total del pedido y persistirlo
         Task<decimal> RecalcularTotalAsync(int pedidoId);
         Task<bool> MarcarPagadoAsync(int pedidoId);
+
+        Task<List<PedidoResponseDTO>> GetByUsuarioAsync(int usuarioId);
     }
 }

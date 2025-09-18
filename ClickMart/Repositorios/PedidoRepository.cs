@@ -41,5 +41,13 @@ namespace ClickMart.Repositorios
             _ctx.Set<Pedido>().Remove(existing);
             return await _ctx.SaveChangesAsync() > 0;
         }
+        public async Task<List<Pedido>> GetByUsuarioAsync(int usuarioId)
+        {
+            return await _ctx.Pedidos
+                .AsNoTracking()
+                .Where(p => p.UsuarioId == usuarioId)
+                .OrderByDescending(p => p.Fecha)
+                .ToListAsync();
+        }
     }
 }

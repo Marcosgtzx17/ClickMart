@@ -112,5 +112,10 @@ namespace ClickMart.Servicios
             PagoEstado = e.PagoEstado,
             TarjetaUltimos4 = e.TarjetaUltimos4
         };
+        public async Task<List<PedidoResponseDTO>> GetByUsuarioAsync(int usuarioId)
+        {
+            var items = await _repo.GetByUsuarioAsync(usuarioId);
+            return items.Select(ToDto).ToList();
+        }
     }
 }
