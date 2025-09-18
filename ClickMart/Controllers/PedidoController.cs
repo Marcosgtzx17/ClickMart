@@ -15,11 +15,16 @@ namespace ClickMart.Api.Controllers
     {
         private readonly IPedidoService _pedidos;
         private readonly ICodigoConfirmacionService _codigos;
+        private readonly IFacturaService _facturas; // <-- NUEVO
 
-        public PedidoController(IPedidoService pedidos, ICodigoConfirmacionService codigos)
+        public PedidoController(
+            IPedidoService pedidos,
+            ICodigoConfirmacionService codigos,
+            IFacturaService facturas) // <-- NUEVO
         {
             _pedidos = pedidos;
             _codigos = codigos;
+            _facturas = facturas; // <-- NUEVO
         }
 
         // GET /api/pedido
@@ -82,7 +87,6 @@ namespace ClickMart.Api.Controllers
             }
         }
 
-
         // POST /api/pedido/123/generar-codigo
         [HttpPost("{id:int}/generar-codigo")]
         public async Task<ActionResult<CodigoConfirmacionResponseDTO>> GenerarCodigoParaPedido(int id)
@@ -124,6 +128,23 @@ namespace ClickMart.Api.Controllers
 
             var ok = await _pedidos.MarcarPagadoAsync(id);
             return ok ? NoContent() : NotFound();
+        }
+
+        // === NUEVO ===
+        // GET /api/pedido/123/factura
+        [HttpGet("{id:int}/factura")]
+        public async Task<IActionResult> DescargarFactura(int id)
+        {
+            // Si quieres exigir que esté pagado, descomenta este bloque:
+            // var pedido = await _pedidos.GetByIdAsync(id);
+            // if (pedido is null) return NotFound();
+            // if (pedido.PagoEstado != EstadoPago.PAGADO)
+            //     return BadRequest(new { message = "El pedido aún no está pagado." });
+
+            var pdf = await _facturas.GenerarFacturaPdfAsync(id);
+            if (pdf is null) return NotFound();
+
+            return File(pdf, "application/pdf", $"Factura_{id}.pdf");
         }
     }
 }

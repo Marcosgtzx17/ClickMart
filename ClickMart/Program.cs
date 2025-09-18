@@ -1,10 +1,12 @@
 using ClickMart.Interfaces;
-using ClickMart.Repositorios;   // AppDbContext, UsuarioRepository
+using ClickMart.Repositorios;   // AppDbContext, repos
 using ClickMart.Servicios;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;     // <-- para FormOptions (multipart)
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using QuestPDF.Infrastructure;               // <-- QuestPDF license
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,10 +16,10 @@ var builder = WebApplication.CreateBuilder(args);
 // =======================
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {
-    var cs = builder.Configuration.GetConnectionString("Conn"); // usa tu Aiven remoto
+    var cs = builder.Configuration.GetConnectionString("Conn");
     options.UseMySql(cs, ServerVersion.AutoDetect(cs));
     options.EnableDetailedErrors();
-    // options.EnableSensitiveDataLogging(); // habilítalo solo en dev si lo necesitas
+    // options.EnableSensitiveDataLogging(); // solo en dev si lo necesitas
 });
 
 // =======================
@@ -26,29 +28,39 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IAuthService, AuthRepository>();
+
 builder.Services.AddScoped<ICategoriaProductoRepository, CategoriaProductoRepository>();
 builder.Services.AddScoped<ICategoriaProductoService, CategoriaProductoService>();
+
 builder.Services.AddScoped<IDistribuidorRepository, DistribuidorRepository>();
 builder.Services.AddScoped<IDistribuidorService, DistribuidorService>();
+
 builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
 builder.Services.AddScoped<IProductoService, ProductoService>();
-// Reseñas
+
 builder.Services.AddScoped<IResenaRepository, ResenaRepository>();
 builder.Services.AddScoped<IResenaService, ResenaService>();
-// Pedido + Detalle + Código
+
 builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
-builder.Services.AddScoped<IDetallePedidoRepository, DetallePedidoRepository>();
-builder.Services.AddScoped<ICodigoConfirmacionRepository, CodigoConfirmacionRepository>();
-// Roles
-builder.Services.AddScoped<IRolRepository, RolRepository>();
-builder.Services.AddScoped<IRolService, RolService>();
-
-
 builder.Services.AddScoped<IPedidoService, PedidoService>();
+
+builder.Services.AddScoped<IDetallePedidoRepository, DetallePedidoRepository>();
 builder.Services.AddScoped<IDetallePedidoService, DetallePedidoService>();
+
+builder.Services.AddScoped<ICodigoConfirmacionRepository, CodigoConfirmacionRepository>();
 builder.Services.AddScoped<ICodigoConfirmacionService, CodigoConfirmacionService>();
 
-//hvnfcfcggngvg
+// Factura (PDF)
+builder.Services.AddScoped<IFacturaService, FacturaService>();   // <-- NUEVO
+
+// =======================
+// Uploads (multipart) - útil para imágenes de producto
+// =======================
+builder.Services.Configure<FormOptions>(o =>
+{
+    o.MultipartBodyLengthLimit = 20 * 1024 * 1024; // 20 MB
+});
+
 // =======================
 // JWT Bearer
 // =======================
@@ -102,6 +114,11 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// =======================
+// QuestPDF (licencia community)
+// =======================
+QuestPDF.Settings.License = LicenseType.Community;
+
 var app = builder.Build();
 
 // =======================
@@ -115,7 +132,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); // <- primero
+app.UseAuthentication();   // <- primero
 app.UseAuthorization();
 
 app.MapControllers();
