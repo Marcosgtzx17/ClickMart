@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36401.2 d17.14
+VisualStudioVersion = 17.14.36401.2
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClickMart", "ClickMart\ClickMart.csproj", "{979A5065-03DB-41E6-ADBD-AD39CD49A605}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClickMart.web", "ClickMart.web\ClickMart.web.csproj", "{8AC2B2BD-5235-49E4-BF0C-CA58D02C56EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{979A5065-03DB-41E6-ADBD-AD39CD49A605}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{979A5065-03DB-41E6-ADBD-AD39CD49A605}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{979A5065-03DB-41E6-ADBD-AD39CD49A605}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AC2B2BD-5235-49E4-BF0C-CA58D02C56EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AC2B2BD-5235-49E4-BF0C-CA58D02C56EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AC2B2BD-5235-49E4-BF0C-CA58D02C56EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AC2B2BD-5235-49E4-BF0C-CA58D02C56EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
