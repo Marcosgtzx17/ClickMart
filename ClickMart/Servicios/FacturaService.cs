@@ -1,164 +1,138 @@
-﻿using System.Globalization;
-using System.Linq; // Sum, Select
-using ClickMart.DTOs.FacturaDTOs;
-using ClickMart.Entidades;
-using ClickMart.Interfaces;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
+﻿using ClickMart.Interfaces;
+using ClickMart.Repositorios;
+using ClickMart.Servicios;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using QuestPDF.Infrastructure;
+using System.Text;
 
-namespace ClickMart.Servicios
+var builder = WebApplication.CreateBuilder(args);
+
+// ======================= EF Core =======================
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {
-    public class FacturaService : IFacturaService
+    var cs = builder.Configuration.GetConnectionString("Conn");
+    options.UseMySql(cs, ServerVersion.AutoDetect(cs));
+    options.EnableDetailedErrors();
+    // options.EnableSensitiveDataLogging();
+});
+
+// ======================= DI =======================
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IAuthService, AuthRepository>();
+builder.Services.AddScoped<ICategoriaProductoRepository, CategoriaProductoRepository>();
+builder.Services.AddScoped<ICategoriaProductoService, CategoriaProductoService>();
+builder.Services.AddScoped<IDistribuidorRepository, DistribuidorRepository>();
+builder.Services.AddScoped<IDistribuidorService, DistribuidorService>();
+builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
+builder.Services.AddScoped<IProductoService, ProductoService>();
+builder.Services.AddScoped<IResenaRepository, ResenaRepository>();
+builder.Services.AddScoped<IResenaService, ResenaService>();
+builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
+builder.Services.AddScoped<IPedidoService, PedidoService>();
+builder.Services.AddScoped<IDetallePedidoRepository, DetallePedidoRepository>();
+builder.Services.AddScoped<IDetallePedidoService, DetallePedidoService>();
+builder.Services.AddScoped<ICodigoConfirmacionRepository, CodigoConfirmacionRepository>();
+builder.Services.AddScoped<ICodigoConfirmacionService, CodigoConfirmacionService>();
+builder.Services.AddScoped<IFacturaService, FacturaService>();
+
+// ======================= Uploads (multipart) =======================
+builder.Services.Configure<FormOptions>(o =>
+{
+    o.MultipartBodyLengthLimit = 20 * 1024 * 1024; // 20 MB
+});
+
+// ======================= JWT =======================
+var jwt = builder.Configuration.GetSection("Jwt");
+var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
     {
-        private readonly IPedidoRepository _pedidos;
-        private readonly IDetallePedidoRepository _detalles;
-        private readonly IProductoRepository _productos;
-        private readonly IUsuarioRepository _usuarios;
-
-        public FacturaService(
-            IPedidoRepository pedidos,
-            IDetallePedidoRepository detalles,
-            IProductoRepository productos,
-            IUsuarioRepository usuarios)
+        o.TokenValidationParameters = new TokenValidationParameters
         {
-            _pedidos = pedidos;
-            _detalles = detalles;
-            _productos = productos;
-            _usuarios = usuarios;
-        }
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwt["Issuer"],
+            ValidAudience = jwt["Audience"],
+            IssuerSigningKey = signingKey,
+            ClockSkew = TimeSpan.FromMinutes(1),
+            RoleClaimType = "rol",
+            NameClaimType = "uid"
+        };
+    });
 
-        public async Task<byte[]?> GenerarFacturaPdfAsync(int pedidoId)
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", p => p.RequireRole("Admin"));
+    options.AddPolicy("ClienteOrAdmin", p => p.RequireRole("Cliente", "Admin"));
+});
+
+// ======================= Controllers + Swagger =======================
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ClickMart API", Version = "v1" });
+
+    // JWT en Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT en header. Ej: Bearer {token}",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
         {
-            var pedido = await _pedidos.GetByIdAsync(pedidoId);
-            if (pedido is null) return null;
-
-            var usuario = await _usuarios.GetByIdAsync(pedido.UsuarioId);
-            var detalles = await _detalles.GetByPedidoAsync(pedidoId);
-
-            // Traemos info de producto para nombre y precio unitario
-            var prodIds = detalles.Select(d => d.IdProducto).Distinct().ToList();
-            var dictProductos = new Dictionary<int, Productos>();
-            foreach (var id in prodIds)
+            new OpenApiSecurityScheme
             {
-                var p = await _productos.GetByIdAsync(id);
-                if (p != null) dictProductos[id] = p;
-            }
-
-            var items = detalles.Select(d =>
-            {
-                var tiene = dictProductos.TryGetValue(d.IdProducto, out var prod);
-
-                decimal precioUnitario = tiene
-                    ? ToDecimal(prod!.Precio)                                          // <-- NO ‘??’ directo
-                    : (d.Cantidad > 0 ? ToDecimal(d.Subtotal) / d.Cantidad : 0m);
-
-                decimal subtotal = ToDecimal(d.Subtotal);                               // <-- normalizado
-
-                return new FacturaItemDTO
-                {
-                    Producto = tiene ? prod!.Nombre : $"Producto {d.IdProducto}",
-                    Cantidad = d.Cantidad,
-                    PrecioUnitario = precioUnitario,
-                    Subtotal = subtotal
-                };
-            }).ToList();
-
-            var factura = new FacturaDTO
-            {
-                PedidoId = pedido.PedidoId,
-                FechaEmision = DateTime.Now, // o pedido.Fecha
-                Usuario = usuario?.Nombre ?? $"Usuario {pedido.UsuarioId}",
-                Total = items.Sum(i => i.Subtotal),
-                Items = items
-            };
-
-            return GenerarPdf(factura);
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
         }
+    });
 
-        // Helper para unificar decimal? -> decimal
-        private static decimal ToDecimal(decimal? value) => value ?? 0m;
+    // 🔧 1) Esquemas únicos por nombre completo (evita CreateDTO duplicados)
+    c.CustomSchemaIds(t => (t.FullName ?? t.Name).Replace('+', '_'));
 
-        private static byte[] GenerarPdf(FacturaDTO m)
-        {
-            var culture = new CultureInfo("es-ES");
+    // 🔧 2) OperationId único por controller/acción/verbo (evita colisiones)
+    c.CustomOperationIds(api =>
+    {
+        var ctrl = api.ActionDescriptor.RouteValues.TryGetValue("controller", out var cName) ? cName : "Controller";
+        var act = api.ActionDescriptor.RouteValues.TryGetValue("action", out var aName) ? aName : "Action";
+        var verb = api.HttpMethod ?? "HTTP";
+        return $"{ctrl}_{act}_{verb}";
+    });
 
-            byte[] pdf = Document.Create(doc =>
-            {
-                doc.Page(page =>
-                {
-                    page.Size(PageSizes.A4);
-                    page.Margin(28);
+    // 🔧 3) Si hubiese dos acciones con misma ruta/verbo, prioriza la primera
+    c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+});
 
-                    page.Header().Row(row =>
-                    {
-                        row.RelativeItem().Text("ClickMart")
-                            .Bold().FontSize(20);
-                        row.RelativeItem().AlignRight().Column(col =>
-                        {
-                            col.Item().Text($"Factura N° {m.PedidoId}").SemiBold();
-                            col.Item().Text($"Fecha de emisión: {m.FechaEmision:yyyy-MM-dd HH:mm}");
-                        });
-                    });
+// ======================= QuestPDF =======================
+QuestPDF.Settings.License = LicenseType.Community;
 
-                    page.Content().Column(col =>
-                    {
-                        col.Spacing(10); // spacing en la columna
+var app = builder.Build();
 
-                        col.Item().Text($"Cliente: {m.Usuario}").FontSize(12);
-
-                        // línea separadora (sin .Spacing aquí)
-                        col.Item().LineHorizontal(0.75f);
-
-                        col.Item().Table(table =>
-                        {
-                            table.ColumnsDefinition(c =>
-                            {
-                                c.RelativeColumn(6); // Producto
-                                c.RelativeColumn(2); // Cantidad
-                                c.RelativeColumn(2); // Precio
-                                c.RelativeColumn(2); // Subtotal
-                            });
-
-                            // Encabezado
-                            table.Header(h =>
-                            {
-                                h.Cell().Element(HeaderCell).Text("Producto");
-                                h.Cell().Element(HeaderCell).AlignRight().Text("Cantidad");
-                                h.Cell().Element(HeaderCell).AlignRight().Text("Precio");
-                                h.Cell().Element(HeaderCell).AlignRight().Text("Subtotal");
-                            });
-
-                            // Filas
-                            foreach (var it in m.Items)
-                            {
-                                table.Cell().Element(BodyCell).Text(it.Producto);
-                                table.Cell().Element(BodyCell).AlignRight().Text(it.Cantidad.ToString());
-                                table.Cell().Element(BodyCell).AlignRight().Text(it.PrecioUnitario.ToString("C", culture));
-                                table.Cell().Element(BodyCell).AlignRight().Text(it.Subtotal.ToString("C", culture));
-                            }
-                        });
-
-                        col.Item().AlignRight().Text($"Total: {m.Total.ToString("C", culture)}")
-                            .Bold().FontSize(14);
-                    });
-
-                    page.Footer().AlignCenter().Text("Gracias por su compra").FontSize(10).Light();
-                });
-            }).GeneratePdf();
-
-            return pdf;
-
-            // Estilos locales
-            static IContainer HeaderCell(IContainer c) =>
-                c.DefaultTextStyle(x => x.SemiBold())
-                 .PaddingVertical(6).PaddingHorizontal(5)
-                 .Background(Colors.Grey.Lighten3)
-                 .BorderBottom(1);
-
-            static IContainer BodyCell(IContainer c) =>
-                c.PaddingVertical(5).PaddingHorizontal(5)
-                 .BorderBottom(0.5f);
-        }
-    }
+// ======================= Pipeline =======================
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();   // ver stack en el navegador si algo rompe
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();

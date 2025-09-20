@@ -7,7 +7,7 @@ namespace ClickMart.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // requiere token válido
+    [Authorize(Roles = "adminitrador")] // requiere token válido
     public class UserController : ControllerBase
     {
         private readonly IUsuarioRepository _usuarioRepository;

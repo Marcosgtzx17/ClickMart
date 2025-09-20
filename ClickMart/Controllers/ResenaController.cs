@@ -1,44 +1,106 @@
-﻿// Controllers/ResenaController.cs
-using ClickMart.Api.Controllers;
-using ClickMart.DTOs.ResenaDTOs;
+﻿using ClickMart.DTOs.ResenaDTOs;
 using ClickMart.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
-namespace ClickMart.Api.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class ResenaController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    [Authorize]
-    public class ResenaController : ControllerBase
+    private readonly IResenaService _svc;
+    private readonly IPedidoService _pedidos; // opcional si quieres exigir "producto comprado"
+    public ResenaController(IResenaService svc, IPedidoService pedidos)
     {
-        private readonly IResenaService _svc;
-        public ResenaController(IResenaService svc) => _svc = svc;
+        _svc = svc;
+        _pedidos = pedidos;
+    }
 
-        [HttpGet]
-        public async Task<ActionResult<List<ResenaResponseDTO>>> GetAll()
-            => Ok(await _svc.GetAllAsync());
+    // Helpers
+    private int? GetUserId()
+    {
+        var raw = User.FindFirst("uid")?.Value
+                  ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                  ?? User.Identity?.Name;
+        return int.TryParse(raw, out var id) ? id : null;
+    }
+    private bool IsAdmin() => User.IsInRole("Admin");
 
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<ResenaResponseDTO>> GetById(int id)
+    // ===== Lectura =====
+
+    // Público: ver todas o por producto (elige el que uses)
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAll() => Ok(await _svc.GetAllAsync());
+
+    [HttpGet("producto/{productoId:int}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetByProducto(int productoId)
+        => Ok(await _svc.GetByIdAsync(productoId));
+
+    [HttpGet("{id:int}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var x = await _svc.GetByIdAsync(id);
+        return x is null ? NotFound() : Ok(x);
+    }
+
+    // ===== Mutaciones =====
+
+    [HttpPost]
+    [Authorize(Roles = "Cliente,Admin")]
+    public async Task<IActionResult> Create([FromBody] ResenaCreateDTO dto)
+    {
+        if (!IsAdmin())
         {
-            var x = await _svc.GetByIdAsync(id);
-            return x is null ? NotFound() : Ok(x);
+            var uid = GetUserId();
+            if (uid is null) return Unauthorized();
+
+            // (Opcional) Validar que el usuario compró ese producto antes
+            // var compro = await _pedidos.UsuarioComproProductoAsync(uid.Value, dto.ProductoId);
+            // if (!compro) return BadRequest(new { message = "Debe haber comprado el producto para reseñarlo." });
+
+            dto.UsuarioId = uid.Value; // forzar ownership
         }
 
-        [HttpPost]
-        public async Task<ActionResult<ResenaResponseDTO>> Create([FromBody] ResenaCreateDTO dto)
+        var created = await _svc.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = created.ResenaId }, created);
+    }
+
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "Cliente,Admin")]
+    public async Task<IActionResult> Update(int id, [FromBody] ResenaUpdateDTO dto)
+    {
+        var current = await _svc.GetByIdAsync(id);
+        if (current is null) return NotFound();
+
+        if (!IsAdmin())
         {
-            var saved = await _svc.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = saved.ResenaId }, saved);
+            var uid = GetUserId();
+            if (uid is null) return Unauthorized();
+            if (current.UsuarioId != uid.Value) return Forbid();
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] ResenaUpdateDTO dto)
-            => (await _svc.UpdateAsync(id, dto)) ? NoContent() : NotFound();
+        var ok = await _svc.UpdateAsync(id, dto);
+        return ok ? NoContent() : NotFound();
+    }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
-            => (await _svc.DeleteAsync(id)) ? NoContent() : NotFound();
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Cliente,Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var current = await _svc.GetByIdAsync(id);
+        if (current is null) return NotFound();
+
+        if (!IsAdmin())
+        {
+            var uid = GetUserId();
+            if (uid is null) return Unauthorized();
+            if (current.UsuarioId != uid.Value) return Forbid();
+        }
+
+        var ok = await _svc.DeleteAsync(id);
+        return ok ? NoContent() : NotFound();
     }
 }

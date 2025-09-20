@@ -9,7 +9,7 @@ namespace ClickMart.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Roles = "administradores")]
     public class RolController : ControllerBase
     {
         private readonly IRolService _svc;

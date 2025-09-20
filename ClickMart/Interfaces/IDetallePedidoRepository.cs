@@ -11,5 +11,7 @@ namespace ClickMart.Interfaces
         Task<DetallePedido> AddAsync(DetallePedido entity);
         Task<bool> UpdateAsync(DetallePedido entity);
         Task<bool> DeleteAsync(int id);
+
+
     }
 }

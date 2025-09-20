@@ -7,65 +7,32 @@ namespace ClickMart.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize] // regla general: requiere auth; GETs públicos abajo
     public class ProductoController : ControllerBase
     {
         private readonly IProductoService _svc;
         public ProductoController(IProductoService svc) => _svc = svc;
 
-        // CRUD
+        // ===== Catálogo público =====
+
+        // GET /api/producto
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<List<ProductoResponseDTO>>> GetAll() =>
             Ok(await _svc.GetAllAsync());
 
+        // GET /api/producto/123
         [HttpGet("{id:int}")]
+        [AllowAnonymous]
         public async Task<ActionResult<ProductoResponseDTO>> GetById(int id)
         {
             var x = await _svc.GetByIdAsync(id);
             return x is null ? NotFound() : Ok(x);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<ProductoResponseDTO>> Create([FromBody] ProductoCreateDTO dto)
-        {
-            var created = await _svc.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.ProductoId }, created);
-        }
-
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] ProductoUpdateDTO dto)
-        {
-            var ok = await _svc.UpdateAsync(id, dto);
-            return ok ? NoContent() : NotFound();
-        }
-
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var ok = await _svc.DeleteAsync(id);
-            return ok ? NoContent() : NotFound();
-        }
-
-        // ===== Imagen (BLOB) =====
-
-        // POST /api/producto/{id}/imagen  (multipart/form-data; field: archivo)
-        [HttpPost("{id:int}/imagen")]
-        [Consumes("multipart/form-data")]
-        [RequestSizeLimit(20_000_000)] // 20 MB
-        public async Task<IActionResult> SubirImagen(int id, IFormFile archivo)
-        {
-            if (archivo == null || archivo.Length == 0)
-                return BadRequest(new { message = "Archivo vacío." });
-
-            using var ms = new MemoryStream();
-            await archivo.CopyToAsync(ms);
-            var ok = await _svc.SubirImagenAsync(id, ms.ToArray());
-            return ok ? NoContent() : NotFound();
-        }
-
-        // GET /api/producto/{id}/imagen  (devuelve el binario con Content-Type correcto)
+        // GET /api/producto/123/imagen
         [HttpGet("{id:int}/imagen")]
-        [AllowAnonymous] // opcional: hazlo público si quieres mostrar imágenes sin login
+        [AllowAnonymous]
         public async Task<IActionResult> ObtenerImagen(int id)
         {
             var bytes = await _svc.ObtenerImagenAsync(id);
@@ -77,10 +44,64 @@ namespace ClickMart.Api.Controllers
                 "image/png" => "png",
                 "image/gif" => "gif",
                 "image/jpeg" => "jpg",
+                "image/webp" => "webp",
                 _ => "bin"
             };
             var fileName = $"producto_{id}.{ext}";
             return File(bytes, mime, fileName);
+        }
+
+        // ===== Mutaciones: solo Admin =====
+
+        // POST /api/producto
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ProductoResponseDTO>> Create([FromBody] ProductoCreateDTO dto)
+        {
+            var created = await _svc.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.ProductoId }, created);
+        }
+
+        // PUT /api/producto/123
+        [HttpPut("{id:int}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Update(int id, [FromBody] ProductoUpdateDTO dto)
+        {
+            var ok = await _svc.UpdateAsync(id, dto);
+            return ok ? NoContent() : NotFound();
+        }
+
+        // DELETE /api/producto/123
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var ok = await _svc.DeleteAsync(id);
+            return ok ? NoContent() : NotFound();
+        }
+
+        // POST /api/producto/123/imagen  (multipart/form-data; field: archivo)
+        [HttpPost("{id:int}/imagen")]
+        [Authorize(Roles = "Admin")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(20_000_000)] // 20 MB
+        public async Task<IActionResult> SubirImagen(int id, [FromForm] ProductoImagenUploadDTO form)
+        {
+            var archivo = form.Archivo;
+            if (archivo == null || archivo.Length == 0)
+                return BadRequest(new { message = "Archivo vacío." });
+
+            using var ms = new MemoryStream();
+            await archivo.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            // Validación por firma (no confiamos en ContentType del cliente)
+            var mime = DetectMime(bytes);
+            if (mime is not ("image/png" or "image/jpeg" or "image/gif" or "image/webp"))
+                return BadRequest(new { message = "Tipo no permitido. Usa PNG, JPG, GIF o WEBP." });
+
+            var ok = await _svc.SubirImagenAsync(id, bytes);
+            return ok ? NoContent() : NotFound();
         }
 
         // Helper local para detectar MIME por firma
@@ -96,8 +117,14 @@ namespace ClickMart.Api.Controllers
                 return "image/jpeg";
 
             // GIF
-            if (data.Length > 3 && data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46)
+            if (data.Length > 6 && data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46)
                 return "image/gif";
+
+            // WEBP: RIFF....WEBP
+            if (data.Length > 12 &&
+                data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 && // "RIFF"
+                data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50)  // "WEBP"
+                return "image/webp";
 
             return "application/octet-stream";
         }

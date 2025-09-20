@@ -8,7 +8,7 @@ namespace ClickMart.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Roles ="administradores")]
     public class CategoriaController : ControllerBase
     {
         private readonly ICategoriaProductoService _svc;

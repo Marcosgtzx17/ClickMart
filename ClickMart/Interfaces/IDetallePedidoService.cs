@@ -10,5 +10,6 @@ namespace ClickMart.Interfaces
         Task<DetallePedidoResponseDTO> CreateAsync(DetallePedidoCreateDTO dto);
         Task<bool> UpdateAsync(int id, DetallePedidoUpdateDTO dto);
         Task<bool> DeleteAsync(int id);
+
     }
 }

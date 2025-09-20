@@ -7,7 +7,7 @@ namespace ClickMart.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Si quieres testear en Swagger sin JWT, comenta esto temporalmente.
+    [Authorize (Roles ="administradores")] // Si quieres testear en Swagger sin JWT, comenta esto temporalmente.
     public class DistribuidorController : ControllerBase
     {
         private readonly IDistribuidorService _service;
