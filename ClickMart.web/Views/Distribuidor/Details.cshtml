@@ -1,0 +1,29 @@
+﻿@model ClickMart.web.DTOs.DistribuidorDTOs.DistribuidorResponseDTO
+@{
+    ViewData["Title"] = "Detalle de distribuidor";
+}
+
+<h2>Detalle de distribuidor</h2>
+
+<div class="card p-3">
+    <dl class="row">
+        <dt class="col-sm-3">ID</dt>
+        <dd class="col-sm-9">@Model.DistribuidorId</dd>
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">@Model.Nombre</dd>
+        <dt class="col-sm-3">Dirección</dt>
+        <dd class="col-sm-9">@Model.Direccion</dd>
+        <dt class="col-sm-3">Teléfono</dt>
+        <dd class="col-sm-9">@Model.Telefono</dd>
+        <dt class="col-sm-3">Email</dt>
+        <dd class="col-sm-9">@Model.Gmail</dd>
+        <dt class="col-sm-3">Descripción</dt>
+        <dd class="col-sm-9">@Model.Descripcion</dd>
+        <dt class="col-sm-3">Fecha registro</dt>
+        <dd class="col-sm-9">@Model.FechaRegistro.ToString("yyyy-MM-dd")</dd>
+    </dl>
+    <div class="mt-2">
+        <a class="btn btn-warning" asp-action="Edit" asp-route-id="@Model.DistribuidorId">Editar</a>
+        <a class="btn btn-secondary" asp-action="Index">Volver</a>
+    </div>
+</div>

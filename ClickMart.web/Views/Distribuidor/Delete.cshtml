@@ -1,0 +1,26 @@
+﻿@model ClickMart.web.DTOs.DistribuidorDTOs.DistribuidorResponseDTO
+@{
+    ViewData["Title"] = "Eliminar distribuidor";
+}
+
+<h2>Eliminar distribuidor</h2>
+
+<div class="alert alert-warning">
+    ¿Seguro que deseas eliminar <strong>@Model.Nombre</strong>? Esta acción no se puede deshacer.
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">@Model.Gmail</dd>
+    <dt class="col-sm-3">Teléfono</dt>
+    <dd class="col-sm-9">@Model.Telefono</dd>
+    <dt class="col-sm-3">Fecha registro</dt>
+    <dd class="col-sm-9">@Model.FechaRegistro.ToString("yyyy-MM-dd")</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.DistribuidorId" />
+    <button type="submit" class="btn btn-danger">Sí, borrar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

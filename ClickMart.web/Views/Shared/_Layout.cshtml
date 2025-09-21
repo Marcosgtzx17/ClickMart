@@ -31,17 +31,45 @@
                         </li>
                     </ul>
 
+
                     <!-- Bloque de autenticación (agregado) -->
                     <div class="d-flex ms-auto align-items-center gap-3">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             @await Component.InvokeAsync("UserInfo")
+                           
                             <a class="btn btn-outline-danger btn-sm" asp-controller="Auth" asp-action="Logout">Cerrar sesión</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Distribuidor" asp-action="Index">Distribuidores</a>
+                
                         }
                         else
                         {
                             <a class="btn btn-primary btn-sm" asp-controller="Auth" asp-action="Login">Iniciar sesión</a>
                         }
+                    </div>
+          
+                    <!-- ... -->
+
+                    <div class="container">
+                        @* 🔔 Alertas globales con TempData *@
+                        @if (TempData["Success"] is string okMsg && !string.IsNullOrWhiteSpace(okMsg))
+                        {
+                            <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+                                @okMsg
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+                        @if (TempData["Error"] is string errMsg && !string.IsNullOrWhiteSpace(errMsg))
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+                                @errMsg
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+
+                        <main role="main" class="pb-3">
+                            @RenderBody()
+                        </main>
                     </div>
                     <!-- Fin bloque de autenticación -->
                 </div>
@@ -65,5 +93,17 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    @section Scripts {
+        <script>
+            setTimeout(() => {
+                document.querySelectorAll('.alert.fade.show')?.forEach(el => {
+                    const alert = bootstrap.Alert.getOrCreateInstance(el);
+                    alert.close();
+                });
+            }, 4000);
+        </script>
+    }
+
 </body>
+
 </html>

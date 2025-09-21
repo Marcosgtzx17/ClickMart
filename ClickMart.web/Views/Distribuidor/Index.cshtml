@@ -1,0 +1,62 @@
+﻿@model List<ClickMart.web.DTOs.DistribuidorDTOs.DistribuidorResponseDTO>
+@{
+    ViewData["Title"] = "Distribuidores";
+}
+
+<h2 class="mb-3">Distribuidores</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a asp-controller="Distribuidor" asp-action="Create" class="btn btn-primary">Nuevo distribuidor</a>
+    <form class="d-flex" method="get" asp-controller="Distribuidor" asp-action="Index">
+        <input name="q" class="form-control form-control-sm me-2" placeholder="Buscar por nombre..." />
+        <button class="btn btn-sm btn-outline-secondary" type="submit">Buscar</button>
+    </form>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(TempData["Success"] as string))
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (!string.IsNullOrWhiteSpace(TempData["Error"] as string))
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (!string.IsNullOrWhiteSpace(ViewBag.Error as string))
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<table class="table table-striped table-hover align-middle">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Fecha registro</th>
+            <th style="width:240px"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var d in Model)
+            {
+                <tr>
+                    <td>@d.Nombre</td>
+                    <td>@d.Telefono</td>
+                    <td>@d.Gmail</td>
+                    <td>@d.FechaRegistro.ToString("yyyy-MM-dd")</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@d.DistribuidorId">Ver</a>
+                        <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@d.DistribuidorId">Editar</a>
+                        <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@d.DistribuidorId">Borrar</a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="5" class="text-center text-muted">No hay distribuidores para mostrar.</td></tr>
+        }
+    </tbody>
+</table>

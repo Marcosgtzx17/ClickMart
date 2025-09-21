@@ -143,5 +143,18 @@ namespace ClickMart.web.Services
 
             return true;
         }
+       
+        public async Task<bool> PutAsync<TRequest>(string endpoint, TRequest data, string? token = null)
+        {
+            var content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json");
+            var resp = await CreateClient(token).PutAsync(endpoint, content);
+            return resp.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> DeleteAsync(string endpoint, string? token = null)
+        {
+            var resp = await CreateClient(token).DeleteAsync(endpoint);
+            return resp.IsSuccessStatusCode;
+        }
     }
 }
