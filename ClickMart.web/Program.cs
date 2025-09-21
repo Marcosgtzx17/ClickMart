@@ -1,12 +1,15 @@
 using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// MVC + helpers
+// ===== MVC + Helpers =====
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
-// HttpClient nombrado "Api" que lee ApiBaseUrl
+// ===== HttpClient "Api" (usa ApiBaseUrl de appsettings.json) =====
+// Ejemplo appsettings.json (MVC):
+// { "ApiBaseUrl": "https://localhost:7069/api/" }
 builder.Services.AddHttpClient("Api", c =>
 {
     var baseUrl = builder.Configuration["ApiBaseUrl"];
@@ -15,43 +18,44 @@ builder.Services.AddHttpClient("Api", c =>
 
     // Normaliza para terminar en /api/
     if (!baseUrl.EndsWith("/")) baseUrl += "/";
-    if (!baseUrl.EndsWith("/api/")) baseUrl = baseUrl.TrimEnd('/') + "/api/";
+    if (!baseUrl.EndsWith("api/")) baseUrl = baseUrl.TrimEnd('/') + "/api/";
 
     c.BaseAddress = new Uri(baseUrl);
-    c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    c.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
-// Autenticación por cookies
+// ===== Auth por Cookie (el MVC protege vistas con cookie) =====
 builder.Services.AddAuthentication("AuthCookie")
     .AddCookie("AuthCookie", opts =>
     {
         opts.LoginPath = "/Auth/Login";
         opts.LogoutPath = "/Auth/Logout";
-        opts.AccessDeniedPath = "/Auth/Denied"; // <- importante: 403 ya no redirige a Login
+        opts.AccessDeniedPath = "/Auth/Denied"; // asegúrate que exista
         opts.SlidingExpiration = true;
         opts.Cookie.Name = ".ClickMart.Auth";
         opts.Cookie.HttpOnly = true;
-        // opts.Cookie.SameSite = SameSiteMode.Lax; // (opcional)
+        // opts.Cookie.SameSite = SameSiteMode.Lax;
         // opts.Cookie.SecurePolicy = CookieSecurePolicy.Always; // si todo es HTTPS
     });
 
-// Autorización (define políticas UNA sola vez)
+// ===== Autorización (políticas opcionales) =====
 builder.Services.AddAuthorization(options =>
 {
-    // Política que acepta Admin, Administrador y el typo legacy adminitrador
+    // Acepta “Admin”, “Administrador” y el typo “adminitrador”
     options.AddPolicy("AdminOnly",
         policy => policy.RequireRole("Admin", "Administrador", "adminitrador"));
 });
 
-// Servicios de la app (DI)
+// ===== Servicios (DI) =====
 builder.Services.AddScoped<ClickMart.web.Services.ApiService>();
 builder.Services.AddScoped<ClickMart.web.Services.AuthService>();
 builder.Services.AddScoped<ClickMart.web.Services.ProductoService>();
-
+builder.Services.AddScoped<ClickMart.web.Services.DistribuidorService>(); // ?? FALTABA
 
 var app = builder.Build();
 
-// Pipeline
+// ===== Pipeline =====
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -63,7 +67,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
+app.UseAuthentication(); // cookie
 app.UseAuthorization();
 
 app.MapControllerRoute(

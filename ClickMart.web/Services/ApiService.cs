@@ -151,10 +151,10 @@ namespace ClickMart.web.Services
             return resp.IsSuccessStatusCode;
         }
 
-        public async Task<bool> DeleteAsync(string endpoint, string? token = null)
-        {
-            var resp = await CreateClient(token).DeleteAsync(endpoint);
-            return resp.IsSuccessStatusCode;
-        }
+        //public async Task<bool> DeleteAsync(string endpoint, string? token = null)
+       // {
+         //   var resp = await CreateClient(token).DeleteAsync(endpoint);
+          //  return resp.IsSuccessStatusCode;
+       // }
     }
 }
