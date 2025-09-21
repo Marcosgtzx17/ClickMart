@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 // MVC
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ClickMart.web.Services.ProductoService>();
 
 // HttpClient nombrado "Api" que lee ApiBaseUrl
 builder.Services.AddHttpClient("Api", c =>
