@@ -3,9 +3,11 @@ using ClickMart.web.Helpers;
 using ClickMart.web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http; // IFormFile
 
 namespace ClickMart.web.Controllers
 {
+    // ✅ Solo requiere estar autenticado para ver listado/detalle
     [Authorize]
     public class ProductoController : Controller
     {
@@ -13,6 +15,7 @@ namespace ClickMart.web.Controllers
 
         public ProductoController(ProductoService svc) => _svc = svc;
 
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             var token = ClaimsHelper.GetToken(User);
@@ -28,6 +31,7 @@ namespace ClickMart.web.Controllers
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
             var token = ClaimsHelper.GetToken(User);
@@ -36,13 +40,15 @@ namespace ClickMart.web.Controllers
             return View(item);
         }
 
+        // 🔒 Solo Admin: mostrar formulario de alta
         [HttpGet]
-        [Authorize(Roles = "Admin")] // espejo de tu API
+        [Authorize(Policy = "AdminOnly")]
         public IActionResult Create() => View(new ProductoCreateDTO());
 
+        // 🔒 Solo Admin: crear
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create(ProductoCreateDTO dto, IFormFile? ImagenArchivo)
         {
             var token = ClaimsHelper.GetToken(User);
@@ -52,7 +58,11 @@ namespace ClickMart.web.Controllers
             try
             {
                 var created = await _svc.CreateAsync(dto, token);
-                if (created is null) { ViewBag.Error = "No se pudo crear el producto."; return View(dto); }
+                if (created is null)
+                {
+                    ViewBag.Error = "No se pudo crear el producto.";
+                    return View(dto);
+                }
 
                 if (ImagenArchivo != null && ImagenArchivo.Length > 0)
                     await _svc.UploadImageAsync(created.ProductoId, ImagenArchivo, token);
@@ -67,8 +77,9 @@ namespace ClickMart.web.Controllers
             }
         }
 
+        // 🔒 Solo Admin: cargar pantalla de edición
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Edit(int id)
         {
             var token = ClaimsHelper.GetToken(User);
@@ -90,9 +101,10 @@ namespace ClickMart.web.Controllers
             return View(vm);
         }
 
+        // 🔒 Solo Admin: actualizar
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Edit(int id, ProductoUpdateDTO dto, IFormFile? ImagenArchivo)
         {
             var token = ClaimsHelper.GetToken(User);
@@ -102,7 +114,12 @@ namespace ClickMart.web.Controllers
             try
             {
                 var ok = await _svc.UpdateAsync(id, dto, token);
-                if (!ok) { ViewBag.Error = "No se pudo actualizar el producto."; ViewBag.Id = id; return View(dto); }
+                if (!ok)
+                {
+                    ViewBag.Error = "No se pudo actualizar el producto.";
+                    ViewBag.Id = id;
+                    return View(dto);
+                }
 
                 if (ImagenArchivo != null && ImagenArchivo.Length > 0)
                     await _svc.UploadImageAsync(id, ImagenArchivo, token);
@@ -118,8 +135,9 @@ namespace ClickMart.web.Controllers
             }
         }
 
+        // 🔒 Solo Admin: confirmar eliminación
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Delete(int id)
         {
             var token = ClaimsHelper.GetToken(User);
@@ -128,9 +146,10 @@ namespace ClickMart.web.Controllers
             return View(item);
         }
 
+        // 🔒 Solo Admin: eliminar
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var token = ClaimsHelper.GetToken(User);

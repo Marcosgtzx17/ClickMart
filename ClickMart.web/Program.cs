@@ -2,10 +2,9 @@ using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// MVC
+// MVC + helpers
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ClickMart.web.Services.ProductoService>();
 
 // HttpClient nombrado "Api" que lee ApiBaseUrl
 builder.Services.AddHttpClient("Api", c =>
@@ -14,7 +13,7 @@ builder.Services.AddHttpClient("Api", c =>
     if (string.IsNullOrWhiteSpace(baseUrl))
         throw new InvalidOperationException("Config 'ApiBaseUrl' no está definida.");
 
-    // Normaliza para evitar sorpresas
+    // Normaliza para terminar en /api/
     if (!baseUrl.EndsWith("/")) baseUrl += "/";
     if (!baseUrl.EndsWith("/api/")) baseUrl = baseUrl.TrimEnd('/') + "/api/";
 
@@ -22,25 +21,37 @@ builder.Services.AddHttpClient("Api", c =>
     c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
-// Auth por cookies (si ya lo tienes, déjalo igual)
+// Autenticación por cookies
 builder.Services.AddAuthentication("AuthCookie")
     .AddCookie("AuthCookie", opts =>
     {
         opts.LoginPath = "/Auth/Login";
         opts.LogoutPath = "/Auth/Logout";
-        opts.AccessDeniedPath = "/Auth/Login";
+        opts.AccessDeniedPath = "/Auth/Denied"; // <- importante: 403 ya no redirige a Login
         opts.SlidingExpiration = true;
+        opts.Cookie.Name = ".ClickMart.Auth";
+        opts.Cookie.HttpOnly = true;
+        // opts.Cookie.SameSite = SameSiteMode.Lax; // (opcional)
+        // opts.Cookie.SecurePolicy = CookieSecurePolicy.Always; // si todo es HTTPS
     });
 
-builder.Services.AddAuthorization();
+// Autorización (define políticas UNA sola vez)
+builder.Services.AddAuthorization(options =>
+{
+    // Política que acepta Admin, Administrador y el typo legacy adminitrador
+    options.AddPolicy("AdminOnly",
+        policy => policy.RequireRole("Admin", "Administrador", "adminitrador"));
+});
 
-// Tus servicios
+// Servicios de la app (DI)
 builder.Services.AddScoped<ClickMart.web.Services.ApiService>();
 builder.Services.AddScoped<ClickMart.web.Services.AuthService>();
-// builder.Services.AddScoped<CategoriaApiService>(); // si lo usas
+builder.Services.AddScoped<ClickMart.web.Services.ProductoService>();
+
 
 var app = builder.Build();
 
+// Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -49,7 +60,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
