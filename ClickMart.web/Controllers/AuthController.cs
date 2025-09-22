@@ -12,7 +12,8 @@ namespace ClickMart.web.Controllers
     {
         private const string AuthScheme = "AuthCookie";
         private readonly AuthService _auth;
-
+        [AllowAnonymous]
+        public IActionResult Denied() => View();
         public AuthController(AuthService auth) => _auth = auth;
 
         [HttpGet]

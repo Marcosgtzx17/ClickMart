@@ -1,10 +1,19 @@
 ﻿@model IEnumerable<ClickMart.web.DTOs.ProductoDTOs.ProductoResponseDTO>
+
 @{
     ViewData["Title"] = "Productos";
+    // 👇 Flag local para mostrar botones solo a admins (incluye el typo legacy)
+    var esAdmin = User.IsInRole("Admin")
+               || User.IsInRole("Administrador")
+               || User.IsInRole("adminitrador");
 }
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">@ViewData["Title"]</h2>
-    <a asp-action="Create" class="btn btn-primary">Nuevo producto</a>
+    @if (esAdmin)
+    {
+        <a asp-action="Create" class="btn btn-primary">Nuevo producto</a>
+    }
 </div>
 
 @if (TempData["Ok"] != null)
@@ -34,20 +43,26 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var p in Model)
+                @if (Model != null)
                 {
-                    <tr>
-                        <td>@p.ProductoId</td>
-                        <td>@p.Nombre</td>
-                        <td>$ @p.Precio</td>
-                        <td>@p.Stock</td>
-                        <td>@p.Marca</td>
-                        <td class="text-end">
-                            <a asp-action="Details" asp-route-id="@p.ProductoId" class="btn btn-sm btn-outline-secondary">Ver</a>
-                            <a asp-action="Edit" asp-route-id="@p.ProductoId" class="btn btn-sm btn-warning">Editar</a>
-                            <a asp-action="Delete" asp-route-id="@p.ProductoId" class="btn btn-sm btn-danger">Eliminar</a>
-                        </td>
-                    </tr>
+                    foreach (var p in Model)
+                    {
+                        <tr>
+                            <td>@p.ProductoId</td>
+                            <td>@p.Nombre</td>
+                            <td>$ @p.Precio</td>
+                            <td>@p.Stock</td>
+                            <td>@p.Marca</td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@p.ProductoId" class="btn btn-sm btn-outline-secondary">Ver</a>
+                                @if (esAdmin)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@p.ProductoId" class="btn btn-sm btn-warning">Editar</a>
+                                    <a asp-action="Delete" asp-route-id="@p.ProductoId" class="btn btn-sm btn-danger">Eliminar</a>
+                                }
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
