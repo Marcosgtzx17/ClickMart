@@ -1,0 +1,17 @@
+﻿@model ClickMart.web.DTOs.CategoriaDTOs.CategoriaResponseDTO
+@{
+    ViewData["Title"] = "Detalle de categoría";
+    var esAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador") || User.IsInRole("adminitrador") || User.IsInRole("administradores");
+}
+<h2>@ViewData["Title"]</h2>
+<dl class="row">
+    <dt class="col-sm-2">Id</dt>
+    <dd class="col-sm-10">@Model.CategoriaId</dd>
+    <dt class="col-sm-2">Nombre</dt>
+    <dd class="col-sm-10">@Model.Nombre</dd>
+</dl>
+@if (esAdmin)
+{
+     <a asp-action="Edit" asp-route-id="@Model.CategoriaId" class="btn btn-warning">Editar</a>
+}
+<a asp-action="Index" class="btn btn-outline-secondary">Volver</a>

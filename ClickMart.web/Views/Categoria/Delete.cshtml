@@ -1,0 +1,17 @@
+﻿@model ClickMart.web.DTOs.CategoriaDTOs.CategoriaResponseDTO
+@{
+    ViewData["Title"] = "Eliminar categoría";
+}
+<h2>@ViewData["Title"]</h2>
+<div class="alert alert-warning">¿Seguro que deseas eliminar esta categoría?</div>
+<dl class="row">
+    <dt class="col-sm-2">Id</dt>
+    <dd class="col-sm-10">@Model.CategoriaId</dd>
+    <dt class="col-sm-2">Nombre</dt>
+    <dd class="col-sm-10">@Model.Nombre</dd>
+</dl>
+<form asp-action="Delete" method="post">
+    <input type="hidden" name="id" value="@Model.CategoriaId" />
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+</form>

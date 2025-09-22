@@ -1,0 +1,56 @@
+﻿@model IEnumerable<ClickMart.web.DTOs.CategoriaDTOs.CategoriaResponseDTO>
+@{
+    ViewData["Title"] = "Categorías";
+    var esAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador") || User.IsInRole("adminitrador") || User.IsInRole("administradores");
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">@ViewData["Title"]</h2>
+    @if (esAdmin)
+    {
+        <a asp-action="Create" class="btn btn-primary">Nueva categoría</a>
+    }
+</div>
+
+@if (TempData["Ok"] != null)
+{
+     <div class="alert alert-success">@TempData["Ok"]</div>
+}
+@if (TempData["Error"] != null)
+{
+     <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
+{
+     <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model ?? Enumerable.Empty<ClickMart.web.DTOs.CategoriaDTOs.CategoriaResponseDTO>())
+                {
+                    <tr>
+                        <td>@c.CategoriaId</td>
+                        <td>@c.Nombre</td>
+                        <td class="text-end">
+                            <a asp-action="Details" asp-route-id="@c.CategoriaId" class="btn btn-sm btn-outline-secondary">Ver</a>
+                            @if (esAdmin)
+                            {
+                                <a asp-action="Edit" asp-route-id="@c.CategoriaId" class="btn btn-sm btn-warning">Editar</a>
+                                <a asp-action="Delete" asp-route-id="@c.CategoriaId" class="btn btn-sm btn-danger">Eliminar</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
