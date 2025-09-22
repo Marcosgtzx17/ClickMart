@@ -2,20 +2,27 @@
 using ClickMart.web.Helpers;
 using ClickMart.web.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http; // IFormFile
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ClickMart.web.Controllers
 {
-    // ✅ Solo requiere estar autenticado para ver listado/detalle
     [Authorize]
+    [Route("[controller]")] // => base /Producto
     public class ProductoController : Controller
     {
         private readonly ProductoService _svc;
+        private readonly CatalogoService _catalogo;
 
-        public ProductoController(ProductoService svc) => _svc = svc;
+        public ProductoController(ProductoService svc, CatalogoService catalogo)
+        {
+            _svc = svc;
+            _catalogo = catalogo;
+        }
 
-        [HttpGet]
+        // GET /Producto
+        [HttpGet("")]
         public async Task<IActionResult> Index()
         {
             var token = ClaimsHelper.GetToken(User);
@@ -31,7 +38,8 @@ namespace ClickMart.web.Controllers
             }
         }
 
-        [HttpGet]
+        // GET /Producto/Details/5
+        [HttpGet("Details/{id:int}")]
         public async Task<IActionResult> Details(int id)
         {
             var token = ClaimsHelper.GetToken(User);
@@ -40,20 +48,24 @@ namespace ClickMart.web.Controllers
             return View(item);
         }
 
-        // 🔒 Solo Admin: mostrar formulario de alta
-        [HttpGet]
+        // GET /Producto/Create
+        [HttpGet("Create")]
         [Authorize(Policy = "AdminOnly")]
-        public IActionResult Create() => View(new ProductoCreateDTO());
+        public async Task<IActionResult> Create()
+        {
+            var token = ClaimsHelper.GetToken(User);
+            await CargarCombosAsync(token);
+            return View(new ProductoCreateDTO());
+        }
 
-        // 🔒 Solo Admin: crear
-        [HttpPost]
+        // POST /Producto/Create
+        [HttpPost("Create")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create(ProductoCreateDTO dto, IFormFile? ImagenArchivo)
         {
             var token = ClaimsHelper.GetToken(User);
-            if (string.IsNullOrWhiteSpace(token)) return RedirectToAction("Login", "Auth");
-            if (!ModelState.IsValid) return View(dto);
+            if (!ModelState.IsValid) { await CargarCombosAsync(token); return View(dto); }
 
             try
             {
@@ -61,6 +73,7 @@ namespace ClickMart.web.Controllers
                 if (created is null)
                 {
                     ViewBag.Error = "No se pudo crear el producto.";
+                    await CargarCombosAsync(token);
                     return View(dto);
                 }
 
@@ -73,18 +86,21 @@ namespace ClickMart.web.Controllers
             catch (Exception ex)
             {
                 ViewBag.Error = ex.Message;
+                await CargarCombosAsync(token);
                 return View(dto);
             }
         }
 
-        // 🔒 Solo Admin: cargar pantalla de edición
-        [HttpGet]
+        // GET /Producto/Edit/5
+        [HttpGet("Edit/{id:int}")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Edit(int id)
         {
             var token = ClaimsHelper.GetToken(User);
             var p = await _svc.GetByIdAsync(id, token);
             if (p is null) return NotFound();
+
+            await CargarCombosAsync(token);
 
             var vm = new ProductoUpdateDTO
             {
@@ -101,15 +117,14 @@ namespace ClickMart.web.Controllers
             return View(vm);
         }
 
-        // 🔒 Solo Admin: actualizar
-        [HttpPost]
+        // POST /Producto/Edit/5
+        [HttpPost("Edit/{id:int}")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Edit(int id, ProductoUpdateDTO dto, IFormFile? ImagenArchivo)
         {
             var token = ClaimsHelper.GetToken(User);
-            if (string.IsNullOrWhiteSpace(token)) return RedirectToAction("Login", "Auth");
-            if (!ModelState.IsValid) { ViewBag.Id = id; return View(dto); }
+            if (!ModelState.IsValid) { ViewBag.Id = id; await CargarCombosAsync(token); return View(dto); }
 
             try
             {
@@ -117,7 +132,7 @@ namespace ClickMart.web.Controllers
                 if (!ok)
                 {
                     ViewBag.Error = "No se pudo actualizar el producto.";
-                    ViewBag.Id = id;
+                    ViewBag.Id = id; await CargarCombosAsync(token);
                     return View(dto);
                 }
 
@@ -130,13 +145,13 @@ namespace ClickMart.web.Controllers
             catch (Exception ex)
             {
                 ViewBag.Error = ex.Message;
-                ViewBag.Id = id;
+                ViewBag.Id = id; await CargarCombosAsync(token);
                 return View(dto);
             }
         }
 
-        // 🔒 Solo Admin: confirmar eliminación
-        [HttpGet]
+        // GET /Producto/Delete/5
+        [HttpGet("Delete/{id:int}")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -146,8 +161,9 @@ namespace ClickMart.web.Controllers
             return View(item);
         }
 
-        // 🔒 Solo Admin: eliminar
-        [HttpPost, ActionName("Delete")]
+        // POST /Producto/Delete/5
+        [HttpPost("Delete/{id:int}")]
+        [ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -164,6 +180,19 @@ namespace ClickMart.web.Controllers
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
+        }
+
+        // ---------- Helpers ----------
+        private async Task CargarCombosAsync(string? token)
+        {
+            var categorias = await _catalogo.GetCategoriasAsync(token)
+                             ?? new List<ClickMart.web.DTOs.CatalogoDTOs.CategoriaDTO>();
+            var distribuidores = await _catalogo.GetDistribuidoresAsync(token)
+                                ?? new List<ClickMart.web.DTOs.CatalogoDTOs.DistribuidorDTO>();
+
+            // Si tu API usa "Id" en lugar de "CategoriaId"/"DistribuidorId", cambia estas keys
+            ViewBag.Categorias = new SelectList(categorias, "CategoriaId", "Nombre");
+            ViewBag.Distribuidores = new SelectList(distribuidores, "DistribuidorId", "Nombre");
         }
     }
 }

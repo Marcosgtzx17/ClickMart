@@ -1,11 +1,18 @@
 ﻿@model IEnumerable<ClickMart.web.DTOs.ProductoDTOs.ProductoResponseDTO>
+@inject IConfiguration Config
 
 @{
     ViewData["Title"] = "Productos";
-    // 👇 Flag local para mostrar botones solo a admins (incluye el typo legacy)
+
+    // Flag local para mostrar botones solo a admins (incluye el typo legacy)
     var esAdmin = User.IsInRole("Admin")
                || User.IsInRole("Administrador")
                || User.IsInRole("adminitrador");
+
+    // URL base absoluta de la API (normaliza para terminar en /api/)
+    var api = Config["ApiBaseUrl"] ?? "";
+    if (!api.EndsWith("/")) api += "/";
+    if (!api.EndsWith("/api/")) api = api.TrimEnd('/') + "/api/";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -34,6 +41,7 @@
         <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">
                 <tr>
+                    <th style="width:72px">Img</th>
                     <th>#</th>
                     <th>Nombre</th>
                     <th>Precio</th>
@@ -47,7 +55,22 @@
                 {
                     foreach (var p in Model)
                     {
+                        var imgUrl = $"{api}producto/{p.ProductoId}/imagen";
                         <tr>
+                            <td>
+                                @if (p.TieneImagen)
+                                {
+                                    <img src="@imgUrl"
+                                         alt="img"
+                                         class="rounded"
+                                         style="width:56px;height:56px;object-fit:cover;" />
+                                }
+                                else
+                                {
+                                    <div class="bg-light border rounded d-inline-block"
+                                         style="width:56px;height:56px;"></div>
+                                }
+                            </td>
                             <td>@p.ProductoId</td>
                             <td>@p.Nombre</td>
                             <td>$ @p.Precio</td>

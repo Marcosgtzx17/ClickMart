@@ -1,4 +1,5 @@
-﻿using ClickMart.DTOs.ProductoDTOs;
+﻿// Controllers/ProductoController.cs
+using ClickMart.DTOs.ProductoDTOs;
 using ClickMart.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,13 +8,13 @@ namespace ClickMart.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // regla general: requiere auth; GETs públicos abajo
+    [Authorize] // regla general: requiere auth; GETs públicos abajo con [AllowAnonymous]
     public class ProductoController : ControllerBase
     {
         private readonly IProductoService _svc;
         public ProductoController(IProductoService svc) => _svc = svc;
 
-        // ===== Catálogo público =====
+        // ===== Lectura pública =====
 
         // GET /api/producto
         [HttpGet]
@@ -21,7 +22,7 @@ namespace ClickMart.Api.Controllers
         public async Task<ActionResult<List<ProductoResponseDTO>>> GetAll() =>
             Ok(await _svc.GetAllAsync());
 
-        // GET /api/producto/123
+        // GET /api/producto/{id}
         [HttpGet("{id:int}")]
         [AllowAnonymous]
         public async Task<ActionResult<ProductoResponseDTO>> GetById(int id)
@@ -30,7 +31,7 @@ namespace ClickMart.Api.Controllers
             return x is null ? NotFound() : Ok(x);
         }
 
-        // GET /api/producto/123/imagen
+        // GET /api/producto/{id}/imagen
         [HttpGet("{id:int}/imagen")]
         [AllowAnonymous]
         public async Task<IActionResult> ObtenerImagen(int id)
@@ -51,38 +52,38 @@ namespace ClickMart.Api.Controllers
             return File(bytes, mime, fileName);
         }
 
-        // ===== Mutaciones: solo Admin =====
+        // ===== Mutaciones (solo admin/alias) =====
 
         // POST /api/producto
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Administrador,adminitrador,administradores")]
         public async Task<ActionResult<ProductoResponseDTO>> Create([FromBody] ProductoCreateDTO dto)
         {
             var created = await _svc.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.ProductoId }, created);
         }
 
-        // PUT /api/producto/123
+        // PUT /api/producto/{id}
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Administrador,adminitrador,administradores")]
         public async Task<IActionResult> Update(int id, [FromBody] ProductoUpdateDTO dto)
         {
             var ok = await _svc.UpdateAsync(id, dto);
             return ok ? NoContent() : NotFound();
         }
 
-        // DELETE /api/producto/123
+        // DELETE /api/producto/{id}
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Administrador,adminitrador,administradores")]
         public async Task<IActionResult> Delete(int id)
         {
             var ok = await _svc.DeleteAsync(id);
             return ok ? NoContent() : NotFound();
         }
 
-        // POST /api/producto/123/imagen  (multipart/form-data; field: archivo)
+        // POST /api/producto/{id}/imagen  (multipart/form-data; field: Archivo)
         [HttpPost("{id:int}/imagen")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Administrador,adminitrador,administradores")]
         [Consumes("multipart/form-data")]
         [RequestSizeLimit(20_000_000)] // 20 MB
         public async Task<IActionResult> SubirImagen(int id, [FromForm] ProductoImagenUploadDTO form)
@@ -95,7 +96,7 @@ namespace ClickMart.Api.Controllers
             await archivo.CopyToAsync(ms);
             var bytes = ms.ToArray();
 
-            // Validación por firma (no confiamos en ContentType del cliente)
+            // Validación por firma
             var mime = DetectMime(bytes);
             if (mime is not ("image/png" or "image/jpeg" or "image/gif" or "image/webp"))
                 return BadRequest(new { message = "Tipo no permitido. Usa PNG, JPG, GIF o WEBP." });
@@ -104,7 +105,7 @@ namespace ClickMart.Api.Controllers
             return ok ? NoContent() : NotFound();
         }
 
-        // Helper local para detectar MIME por firma
+        // ===== Helper local para detectar MIME por firma =====
         private static string DetectMime(byte[] data)
         {
             // PNG
