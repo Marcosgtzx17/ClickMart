@@ -40,7 +40,9 @@ namespace ClickMart.Repositorios
                 UsuarioId = u.UsuarioId,
                 Nombre = u.Nombre,
                 Email = u.Email,
-                  Rol = u.Rol?.Nombre ?? "Usuario",
+                Telefono = u.Telefono,
+                Direccion = u.Direccion,
+                Rol = u.Rol?.Nombre ?? "Usuario",
             }).ToList();
         }
         public async Task<Usuario?> GetByIdAsync(int id)

@@ -151,10 +151,24 @@ namespace ClickMart.web.Services
             return resp.IsSuccessStatusCode;
         }
 
+        public async Task<bool> PutNoContentAsync<TRequest>(string endpoint, TRequest data, string? token = null)
+        {
+            endpoint = endpoint.TrimStart('/');
+            var content = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json");
+            var resp = await CreateClient(token).PutAsync(endpoint, content);
+            var json = await resp.Content.ReadAsStringAsync(); // por si viene ProblemDetails en error
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                var msg = ExtractApiErrorMessage(json) ?? resp.ReasonPhrase ?? "Error al llamar a la API (PUT)";
+                throw new ApiHttpException(resp.StatusCode, msg, json);
+            }
+            return true;
+        }
         //public async Task<bool> DeleteAsync(string endpoint, string? token = null)
-       // {
-         //   var resp = await CreateClient(token).DeleteAsync(endpoint);
-          //  return resp.IsSuccessStatusCode;
-       // }
+        // {
+        //   var resp = await CreateClient(token).DeleteAsync(endpoint);
+        //  return resp.IsSuccessStatusCode;
+        // }
     }
 }

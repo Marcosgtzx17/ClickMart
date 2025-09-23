@@ -18,8 +18,8 @@ namespace ClickMart.web.Services
         public Task<UsuarioListadoDTO?> CreateAsync(UsuarioCreateDTO dto, string token) =>
             _api.PostAsync<UsuarioCreateDTO, UsuarioListadoDTO>($"{Base}", dto, token);
 
-        public Task<UsuarioListadoDTO?> UpdateAsync(int id, UsuarioUpdateDTO dto, string token) =>
-            _api.PutAsync<UsuarioUpdateDTO, UsuarioListadoDTO>($"{Base}/{id}", dto, token);
+    public Task<bool> UpdateAsync(int id, UsuarioUpdateDTO dto, string token) =>
+        _api.PutNoContentAsync($"{Base}/{id}", dto, token);
 
         public Task<bool> DeleteAsync(int id, string token) =>
             _api.DeleteAsync($"{Base}/{id}", token);

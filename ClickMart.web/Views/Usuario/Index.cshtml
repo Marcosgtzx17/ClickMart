@@ -9,15 +9,15 @@
 
 @if (TempData["Ok"] != null)
 {
-     <div class="alert alert-success">@TempData["Ok"]</div>
+    <div class="alert alert-success">@TempData["Ok"]</div>
 }
 @if (TempData["Error"] != null)
 {
-     <div class="alert alert-danger">@TempData["Error"]</div>
+    <div class="alert alert-danger">@TempData["Error"]</div>
 }
 @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
 {
-     <div class="alert alert-danger">@ViewBag.Error</div>
+    <div class="alert alert-danger">@ViewBag.Error</div>
 }
 
 <div class="card shadow-sm">
@@ -28,6 +28,8 @@
                     <th>#</th>
                     <th>Nombre</th>
                     <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Dirección</th>
                     <th>Rol</th>
                     <th class="text-end">Acciones</th>
                 </tr>
@@ -35,11 +37,18 @@
             <tbody>
                 @foreach (var u in Model)
                 {
+                    var isAdmin = !string.IsNullOrWhiteSpace(u.Rol) &&
+                    (u.Rol.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
+                    u.Rol.Equals("Administrador", StringComparison.OrdinalIgnoreCase));
+                    var badgeClass = isAdmin ? "badge bg-warning text-dark" : "badge bg-secondary text-dark";
+
                     <tr>
                         <td>@u.UsuarioId</td>
                         <td>@u.Nombre</td>
                         <td>@u.Email</td>
-                        <td><span class="badge text-bg-secondary">@u.Rol</span></td>
+                        <td>@(string.IsNullOrWhiteSpace(u.Telefono) ? "—" : u.Telefono)</td>
+                        <td>@(string.IsNullOrWhiteSpace(u.Direccion) ? "—" : u.Direccion)</td>
+                        <td><span class="@badgeClass">@(!string.IsNullOrWhiteSpace(u.Rol) ? u.Rol : "—")</span></td>
                         <td class="text-end">
                             <a asp-action="Details" asp-route-id="@u.UsuarioId" class="btn btn-sm btn-outline-secondary">Ver</a>
                             <a asp-action="Edit" asp-route-id="@u.UsuarioId" class="btn btn-sm btn-warning">Editar</a>

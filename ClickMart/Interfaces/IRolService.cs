@@ -11,5 +11,7 @@ namespace ClickMart.Interfaces
         Task<RolResponseDTO> CreateAsync(RolCreateDTO dto);
         Task<bool> UpdateAsync(int id, RolUpdateDTO dto);
         Task<bool> DeleteAsync(int id);
+
+
     }
 }

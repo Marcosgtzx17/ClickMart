@@ -11,5 +11,7 @@ namespace ClickMart.Interfaces
         Task<Rol> AddAsync(Rol entity);
         Task<bool> UpdateAsync(Rol entity);
         Task<bool> DeleteAsync(int id);
+
+
     }
 }

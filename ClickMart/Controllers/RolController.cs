@@ -1,5 +1,4 @@
 ﻿// Controllers/RolController.cs
-using ClickMart.DTOs.RolDTOs;
 using ClickMart.DTOs.RolDTOs.ClickMart.DTOs.RolDTOs;
 using ClickMart.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +8,7 @@ namespace ClickMart.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "administradores")]
+    [Authorize(Policy = "AdminOnly")]
     public class RolController : ControllerBase
     {
         private readonly IRolService _svc;

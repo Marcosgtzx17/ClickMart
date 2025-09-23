@@ -39,6 +39,8 @@ builder.Services.AddScoped<IDetallePedidoService, DetallePedidoService>();
 builder.Services.AddScoped<ICodigoConfirmacionRepository, CodigoConfirmacionRepository>();
 builder.Services.AddScoped<ICodigoConfirmacionService, CodigoConfirmacionService>();
 builder.Services.AddScoped<IFacturaService, FacturaService>();
+builder.Services.AddScoped<IRolRepository, RolRepository>();
+builder.Services.AddScoped<IRolService, RolService>();
 
 // ======================= Uploads (multipart) =======================
 builder.Services.Configure<FormOptions>(o =>
@@ -71,8 +73,8 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", p => p.RequireRole("Admin"));
-    options.AddPolicy("ClienteOrAdmin", p => p.RequireRole("Cliente", "Admin"));
+    options.AddPolicy("AdminOnly", p => p.RequireRole("Admin", "Administrador", "adminitrador", "administradores"));
+    options.AddPolicy("ClienteOrAdmin", p => p.RequireRole("Cliente", "Admin", "Administrador"));
 });
 
 // ======================= Controllers + Swagger =======================
