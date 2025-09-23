@@ -1,0 +1,35 @@
+﻿@model ClickMart.web.DTOs.UsuarioDTOs.UsuarioUpdateDTO
+@{
+    ViewData["Title"] = "Editar usuario";
+}
+<h2>@ViewData["Title"]</h2>
+<form asp-action="Edit" method="post" class="card shadow-sm p-3">
+    <input type="hidden" name="id" value="@ViewBag.Id" />
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Nombre" class="form-label"></label>
+            <input asp-for="Nombre" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Telefono" class="form-label"></label>
+            <input asp-for="Telefono" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Direccion" class="form-label"></label>
+            <input asp-for="Direccion" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="RolId" class="form-label"></label>
+            <input asp-for="RolId" class="form-control" type="number" min="1" />
+        </div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Actualizar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    </div>
+    <div class="text-danger mt-2">@ViewBag.Error</div>
+</form>

@@ -1,0 +1,20 @@
+﻿@model ClickMart.web.DTOs.UsuarioDTOs.UsuarioListadoDTO
+@{
+    ViewData["Title"] = "Detalle de usuario";
+}
+<h2>@ViewData["Title"]</h2>
+<dl class="row">
+    <dt class="col-sm-2">Id</dt>
+    <dd class="col-sm-10">@Model.UsuarioId</dd>
+
+    <dt class="col-sm-2">Nombre</dt>
+    <dd class="col-sm-10">@Model.Nombre</dd>
+
+    <dt class="col-sm-2">Email</dt>
+    <dd class="col-sm-10">@Model.Email</dd>
+
+    <dt class="col-sm-2">Rol</dt>
+    <dd class="col-sm-10"><span class="badge text-bg-secondary">@Model.Rol</span></dd>
+</dl>
+<a asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-warning">Editar</a>
+<a asp-action="Index" class="btn btn-outline-secondary">Volver</a>

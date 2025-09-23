@@ -1,0 +1,42 @@
+﻿@model ClickMart.web.DTOs.UsuarioDTOs.UsuarioCreateDTO
+@{
+    ViewData["Title"] = "Crear usuario";
+}
+<h2>@ViewData["Title"]</h2>
+<form asp-action="Create" method="post" class="card shadow-sm p-3">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label asp-for="Nombre" class="form-label"></label>
+            <input asp-for="Nombre" class="form-control" />
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Telefono" class="form-label"></label>
+            <input asp-for="Telefono" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Direccion" class="form-label"></label>
+            <input asp-for="Direccion" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Password</label>
+            <input asp-for="PasswordHash" class="form-control" type="password" />
+            <small class="text-muted">La API hashea este valor internamente.</small>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="RolId" class="form-label"></label>
+            <input asp-for="RolId" class="form-control" type="number" min="1" />
+            <small class="text-muted">Ingresa el ID del rol.</small>
+        </div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    </div>
+    <div class="text-danger mt-2">@ViewBag.Error</div>
+</form>
