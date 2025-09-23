@@ -54,6 +54,9 @@ builder.Services.AddScoped<ClickMart.web.Services.ProductoService>();
 builder.Services.AddScoped<ClickMart.web.Services.DistribuidorService>(); // ?? FALTABA
 builder.Services.AddScoped<ClickMart.web.Services.CategoriaService>();
 builder.Services.AddScoped<ClickMart.web.Services.CatalogoService>();
+builder.Services.AddScoped<ClickMart.web.Services.UsuarioService>();
+
+
 var app = builder.Build();
 
 // ===== Pipeline =====
