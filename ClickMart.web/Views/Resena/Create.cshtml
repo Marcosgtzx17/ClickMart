@@ -1,0 +1,16 @@
+﻿@model ClickMart.web.DTOs.ResenaDTOs.ResenaFormVM
+@{
+    ViewData["Title"] = "Nueva reseña";
+}
+<h2>@ViewData["Title"]</h2>
+<hr />
+<form asp-action="Create" method="post">
+    <partial name="_ResenaForm" model="Model" />
+    <div>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

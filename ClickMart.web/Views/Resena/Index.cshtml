@@ -1,0 +1,74 @@
+﻿@model List<ClickMart.web.DTOs.ResenaDTOs.ResenaResponseDTO>
+@{
+    ViewData["Title"] = "Reseñas";
+    var users = ViewBag.UserNames as Dictionary<int, string> ?? new();
+    var prods = ViewBag.ProductNames as Dictionary<int, string> ?? new();
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">@ViewData["Title"]</h2>
+    <a asp-action="Create" class="btn btn-primary">Nueva reseña</a>
+</div>
+
+@if (TempData["Ok"] != null)
+{
+    <div class="alert alert-success">@TempData["Ok"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Usuario</th>
+                    <th>Producto</th>
+                    <th>Calificación</th>
+                    <th>Fecha</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model?.Any() == true)
+                {
+                    var i = 1;
+                    foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>@i</td>
+                            <td>@(users.ContainsKey(r.UsuarioId) ? users[r.UsuarioId] : r.UsuarioId.ToString())</td>
+                            <td>@(prods.ContainsKey(r.ProductoId) ? prods[r.ProductoId] : r.ProductoId.ToString())</td>
+                            <td>
+                                <span class="stars-view" aria-label="@($"{r.Calificacion} de 5")">
+                                    @for (var s = 1; s <= 5; s++)
+                                    {
+                                        <span class="star @(s <= r.Calificacion ? "active" : "")">★</span>
+                                    }
+                                </span>
+                            </td>
+                            <td>@r.FechaResena.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@r.ResenaId">Editar</a>
+                                <form asp-action="Delete" asp-route-id="@r.ResenaId" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar reseña?');">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="6" class="text-center py-4">Sin datos</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

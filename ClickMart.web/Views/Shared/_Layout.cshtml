@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ClickMart.web.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/stars.css" />
+    <script src="~/js/stars.js"></script>
 </head>
 <body>
     <header>
@@ -35,7 +37,9 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Usuario" asp-action="Index">Usuarios</a>
                         </li>
-
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Resena" asp-action="Index">Reseñas</a>
+                        </li>
                     </ul>
 
 
@@ -44,20 +48,18 @@
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             @await Component.InvokeAsync("UserInfo")
-                           
+
                             <a class="btn btn-outline-danger btn-sm" asp-controller="Auth" asp-action="Logout">Cerrar sesión</a>
                             <a class="nav-link text-dark" asp-area="" asp-controller="Distribuidor" asp-action="Index">Distribuidores</a>
-                
+
                         }
                         else
                         {
                             <a class="btn btn-primary btn-sm" asp-controller="Auth" asp-action="Login">Iniciar sesión</a>
                         }
                     </div>
-          
-                    <!-- ... -->
 
-                   
+                    <!-- ... -->
                     <!-- Fin bloque de autenticación -->
                 </div>
             </div>

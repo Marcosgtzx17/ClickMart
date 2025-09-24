@@ -1,0 +1,12 @@
+﻿@model ClickMart.web.DTOs.ResenaDTOs.ResenaResponseDTO
+@{
+    ViewData["Title"] = "Eliminar reseña";
+}
+<h2>@ViewData["Title"]</h2>
+<hr />
+<div class="alert alert-warning">¿Seguro que deseas eliminar esta reseña?</div>
+<form asp-action="Delete" method="post">
+    <input type="hidden" name="id" value="@Model.ResenaId" />
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
