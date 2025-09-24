@@ -1,0 +1,36 @@
+﻿/* --- Star rating input & readonly view --- */
+.star-input, .stars-view {
+    display: inline-flex;
+    gap: .35rem;
+    font-size: 1.6rem;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+    .star-input .star {
+        appearance: none;
+        background: none;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        color: #c9c9c9;
+    }
+
+        .star-input .star.active,
+        .star-input .star.hover {
+            color: #f5a623; /* dorado */
+        }
+
+        .star-input .star:focus-visible {
+            outline: 2px solid #0d6efd;
+            outline-offset: 2px;
+        }
+
+    /* Visualización read-only (Index) */
+    .stars-view .star {
+        color: #c9c9c9;
+    }
+
+        .stars-view .star.active {
+            color: #f5a623;
+        }
