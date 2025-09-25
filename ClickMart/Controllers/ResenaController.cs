@@ -10,6 +10,7 @@ public class ResenaController : ControllerBase
 {
     private readonly IResenaService _svc;
     private readonly IPedidoService _pedidos; // opcional si quieres exigir "producto comprado"
+
     public ResenaController(IResenaService svc, IPedidoService pedidos)
     {
         _svc = svc;
@@ -24,19 +25,21 @@ public class ResenaController : ControllerBase
                   ?? User.Identity?.Name;
         return int.TryParse(raw, out var id) ? id : null;
     }
+
     private bool IsAdmin() => User.IsInRole("Admin");
 
     // ===== Lectura =====
 
-    // Público: ver todas o por producto (elige el que uses)
+    // Público: ver todas
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> GetAll() => Ok(await _svc.GetAllAsync());
 
+    // Público: por producto (si tu servicio expone esta consulta)
     [HttpGet("producto/{productoId:int}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetByProducto(int productoId)
-        => Ok(await _svc.GetByIdAsync(productoId));
+        => Ok(await _svc.GetByIdAsync(productoId)); // <-- ajusta si tu interfaz usa otro nombre
 
     [HttpGet("{id:int}")]
     [AllowAnonymous]
@@ -52,17 +55,15 @@ public class ResenaController : ControllerBase
     [Authorize(Roles = "Cliente,Admin")]
     public async Task<IActionResult> Create([FromBody] ResenaCreateDTO dto)
     {
-        if (!IsAdmin())
-        {
-            var uid = GetUserId();
-            if (uid is null) return Unauthorized();
+        // Fuerza SIEMPRE el autor autenticado, sin excepción (incluye Admin)
+        var uid = GetUserId();
+        if (uid is null) return Unauthorized();
 
-            // (Opcional) Validar que el usuario compró ese producto antes
-            // var compro = await _pedidos.UsuarioComproProductoAsync(uid.Value, dto.ProductoId);
-            // if (!compro) return BadRequest(new { message = "Debe haber comprado el producto para reseñarlo." });
+        dto.UsuarioId = uid.Value;
 
-            dto.UsuarioId = uid.Value; // forzar ownership
-        }
+        // (Opcional) Validación de compra previa
+        // var compro = await _pedidos.UsuarioComproProductoAsync(uid.Value, dto.ProductoId);
+        // if (!compro) return BadRequest(new { message = "Debe haber comprado el producto para reseñarlo." });
 
         var created = await _svc.CreateAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = created.ResenaId }, created);

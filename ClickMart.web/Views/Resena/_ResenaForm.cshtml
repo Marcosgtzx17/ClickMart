@@ -1,38 +1,21 @@
 ﻿@model ClickMart.web.DTOs.ResenaDTOs.ResenaFormVM
-@{
-    // Admin puede elegir usuario en CREATE. En EDIT siempre queda bloqueado para todos.
-    var isAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador");
-}
 
 <div class="mb-3">
     <label asp-for="UsuarioId" class="form-label">Usuario</label>
 
-    @* Si es EDIT (ResenaId tiene valor) → BLOQUEADO para todos *@
-    @if (Model.ResenaId.HasValue)
-    {
-        <input type="hidden" asp-for="UsuarioId" />
-        <input class="form-control mb-2" value="@(Model.UsuarioNombre ?? Model.UsuarioId.ToString())" disabled />
-        @if (!string.IsNullOrWhiteSpace(Model.UsuarioEmail))
-        {
-            <input class="form-control" value="@Model.UsuarioEmail" disabled />
-        }
+    <!-- Siempre mandamos el Id oculto -->
+    <input type="hidden" asp-for="UsuarioId" />
+
+    @{
+        var display = !string.IsNullOrWhiteSpace(Model.UsuarioEmail)
+        ? Model.UsuarioEmail
+        : (!string.IsNullOrWhiteSpace(Model.UsuarioNombre)
+        ? Model.UsuarioNombre
+        : Model.UsuarioId.ToString());
     }
-    else
-    {
-        @* CREATE *@
-        @if (isAdmin)
-        {
-            <select asp-for="UsuarioId" class="form-select" asp-items="Model.Usuarios">
-                <option value="">-- Selecciona --</option>
-            </select>
-        }
-        else
-        {
-            @* No admin: autocompletar email y pre-llenar UsuarioId (hidden) *@
-            <input type="hidden" asp-for="UsuarioId" />
-            <input class="form-control" value="@Model.UsuarioEmail" disabled />
-        }
-    }
+
+    <!-- Un solo campo visible, solo lectura -->
+    <input class="form-control" value="@display" disabled />
 
     <span asp-validation-for="UsuarioId" class="text-danger"></span>
 </div>
