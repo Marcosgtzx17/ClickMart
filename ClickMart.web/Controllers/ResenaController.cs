@@ -1,4 +1,5 @@
-﻿using ClickMart.web.DTOs.ResenaDTOs;
+﻿// ClickMart.web/Controllers/ResenaController.cs
+using ClickMart.web.DTOs.ResenaDTOs;
 using ClickMart.web.DTOs.ProductoDTOs;
 using ClickMart.web.DTOs.UsuarioDTOs;
 using ClickMart.web.Helpers;
@@ -6,6 +7,7 @@ using ClickMart.web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
 
 namespace ClickMart.web.Controllers
 {
@@ -23,6 +25,30 @@ namespace ClickMart.web.Controllers
             _productos = productos;
         }
 
+        // Helpers
+        private static string DisplayUser(UsuarioListadoDTO u) =>
+            string.IsNullOrWhiteSpace(u.Email) ? (u.Nombre ?? $"Usuario {u.UsuarioId}") : u.Email;
+
+        private string? GetEmail() =>
+            User?.Claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+
+        private async Task PopulateCombos(ResenaFormVM vm, string? token)
+        {
+            var us = await _usuarios.GetAllAsync(token) ?? new List<UsuarioListadoDTO>();
+            vm.Usuarios = us.Select(u => new SelectListItem
+            {
+                Value = u.UsuarioId.ToString(),
+                Text = DisplayUser(u)
+            }).ToList();
+
+            var prods = await _productos.GetAllAsync(token) ?? new List<ProductoResponseDTO>();
+            vm.Productos = prods.Select(p => new SelectListItem
+            {
+                Value = p.ProductoId.ToString(),
+                Text = p.Nombre
+            }).ToList();
+        }
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -31,10 +57,10 @@ namespace ClickMart.web.Controllers
             {
                 var data = await _svc.GetAllAsync(token) ?? new List<ResenaResponseDTO>();
 
-                // Mapear nombres para mostrar en tabla
+                // Para mostrar nombres en la tabla
                 var us = await _usuarios.GetAllAsync(token) ?? new List<UsuarioListadoDTO>();
                 var prods = await _productos.GetAllAsync(token) ?? new List<ProductoResponseDTO>();
-                var mapUsers = us.ToDictionary(x => x.UsuarioId, x => x.Email ?? x.Nombre ?? $"Usuario {x.UsuarioId}");
+                var mapUsers = us.ToDictionary(x => x.UsuarioId, DisplayUser);
                 var mapProds = prods.ToDictionary(x => x.ProductoId, x => x.Nombre);
 
                 ViewBag.UserNames = mapUsers;
@@ -49,24 +75,34 @@ namespace ClickMart.web.Controllers
             }
         }
 
-        private async Task PopulateCombos(ResenaFormVM vm, string? token)
-        {
-            var us = await _usuarios.GetAllAsync(token) ?? new List<UsuarioListadoDTO>();
-            vm.Usuarios = us.Select(u => new SelectListItem
-            {
-                Value = u.UsuarioId.ToString(),
-                Text = string.IsNullOrWhiteSpace(u.Email) ? (u.Nombre ?? $"Usuario {u.UsuarioId}") : u.Email
-            }).ToList();
-
-            var prods = await _productos.GetAllAsync(token) ?? new List<ProductoResponseDTO>();
-            vm.Productos = prods.Select(p => new SelectListItem { Value = p.ProductoId.ToString(), Text = p.Nombre }).ToList();
-        }
-
         [HttpGet]
         public async Task<IActionResult> Create()
         {
             var token = ClaimsHelper.GetToken(User);
-            var vm = new ResenaFormVM { Calificacion = 5, FechaResena = DateTime.UtcNow };
+
+            var vm = new ResenaFormVM
+            {
+                Calificacion = 5,
+                FechaResena = DateTime.UtcNow
+            };
+
+            // --- Autocompletar email + UsuarioId del usuario logueado ---
+            // 1) Obtener email desde Claims
+            vm.UsuarioEmail = GetEmail();
+
+            // 2) Resolver UsuarioId buscando por email (para pasar la validación del VM)
+            if (!string.IsNullOrWhiteSpace(vm.UsuarioEmail))
+            {
+                var users = await _usuarios.GetAllAsync(token) ?? new List<UsuarioListadoDTO>();
+                var match = users.FirstOrDefault(u =>
+                    string.Equals(u.Email, vm.UsuarioEmail, StringComparison.OrdinalIgnoreCase));
+                if (match != null)
+                {
+                    vm.UsuarioId = match.UsuarioId; // pre-llenar
+                }
+            }
+            // Nota: si no encontrara match, el backend igual forzará el UsuarioId del token.
+
             await PopulateCombos(vm, token);
             return View(vm);
         }
@@ -76,6 +112,7 @@ namespace ClickMart.web.Controllers
         public async Task<IActionResult> Create(ResenaFormVM vm)
         {
             var token = ClaimsHelper.GetToken(User);
+
             if (!ModelState.IsValid)
             {
                 await PopulateCombos(vm, token);
@@ -86,12 +123,13 @@ namespace ClickMart.web.Controllers
             {
                 var dto = new ResenaCreateDTO
                 {
-                    UsuarioId = vm.UsuarioId,
+                    UsuarioId = vm.UsuarioId,   // El backend lo forzará al usuario autenticado si no es Admin
                     ProductoId = vm.ProductoId,
                     Calificacion = vm.Calificacion,
                     Comentario = vm.Comentario,
                     FechaResena = vm.FechaResena
                 };
+
                 var created = await _svc.CreateAsync(dto, token!);
                 TempData["Ok"] = "Reseña creada correctamente.";
                 return RedirectToAction(nameof(Index));
@@ -120,7 +158,14 @@ namespace ClickMart.web.Controllers
                 Comentario = data.Comentario,
                 FechaResena = data.FechaResena
             };
-            await PopulateCombos(vm, token);
+
+            // Mostrar autor en solo lectura (nombre y email si lo tenemos)
+            var usuarios = await _usuarios.GetAllAsync(token) ?? new List<UsuarioListadoDTO>();
+            var byId = usuarios.FirstOrDefault(u => u.UsuarioId == data.UsuarioId);
+            vm.UsuarioNombre = byId != null ? DisplayUser(byId) : data.UsuarioId.ToString();
+            vm.UsuarioEmail = byId?.Email; // opcional en Edit (solo display)
+
+            await PopulateCombos(vm, token); // combo Usuario no se usa en Edit (queda bloqueado en la vista)
             return View(vm);
         }
 
@@ -129,11 +174,13 @@ namespace ClickMart.web.Controllers
         public async Task<IActionResult> Edit(int id, ResenaFormVM vm)
         {
             var token = ClaimsHelper.GetToken(User);
+
             if (!ModelState.IsValid)
             {
                 await PopulateCombos(vm, token);
                 return View(vm);
             }
+
             try
             {
                 var dto = new ResenaUpdateDTO
@@ -142,6 +189,7 @@ namespace ClickMart.web.Controllers
                     Comentario = vm.Comentario,
                     FechaResena = vm.FechaResena
                 };
+
                 var ok = await _svc.UpdateAsync(id, dto, token!);
                 if (!ok) TempData["Error"] = "No se pudo actualizar la reseña.";
                 else TempData["Ok"] = "Reseña actualizada.";

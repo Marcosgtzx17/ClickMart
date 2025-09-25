@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿// ClickMart.web/DTOs/ResenaDTOs/ResenaFormVM.cs
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace ClickMart.web.DTOs.ResenaDTOs
@@ -9,6 +10,9 @@ namespace ClickMart.web.DTOs.ResenaDTOs
 
         [Required]
         public int UsuarioId { get; set; }
+
+        public string? UsuarioNombre { get; set; } // display en Edit
+        public string? UsuarioEmail { get; set; }  // display y autocompletar en Create
 
         [Required]
         public int ProductoId { get; set; }
@@ -21,7 +25,6 @@ namespace ClickMart.web.DTOs.ResenaDTOs
 
         public DateTime? FechaResena { get; set; }
 
-        // Combos
         public IEnumerable<SelectListItem> Usuarios { get; set; } = Enumerable.Empty<SelectListItem>();
         public IEnumerable<SelectListItem> Productos { get; set; } = Enumerable.Empty<SelectListItem>();
     }
