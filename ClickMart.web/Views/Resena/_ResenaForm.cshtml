@@ -1,33 +1,54 @@
 ﻿@model ClickMart.web.DTOs.ResenaDTOs.ResenaFormVM
 
-<div class="mb-3">
-    <label asp-for="UsuarioId" class="form-label">Usuario</label>
-
-    <!-- Siempre mandamos el Id oculto -->
-    <input type="hidden" asp-for="UsuarioId" />
-
-    @{
-        var display = !string.IsNullOrWhiteSpace(Model.UsuarioEmail)
+@{
+    // ==== Cálculos previos para evitar @{} dentro de @if ====
+    // Usuario para mostrar
+    var displayUser = !string.IsNullOrWhiteSpace(Model.UsuarioEmail)
         ? Model.UsuarioEmail
         : (!string.IsNullOrWhiteSpace(Model.UsuarioNombre)
-        ? Model.UsuarioNombre
-        : Model.UsuarioId.ToString());
+            ? Model.UsuarioNombre
+            : Model.UsuarioId.ToString());
+
+    // ¿Se bloquea el producto? (Edit o Create con producto preseleccionado)
+    var lockProduct = Model.ResenaId.HasValue || (Model.ProductoId > 0);
+
+    // Nombre del producto si está bloqueado
+    string productName = string.Empty;
+    if (lockProduct)
+    {
+        var sel = Model.Productos?.FirstOrDefault(p => p.Value == Model.ProductoId.ToString());
+        productName = sel?.Text ?? $"Producto {Model.ProductoId}";
     }
+}
 
-    <!-- Un solo campo visible, solo lectura -->
-    <input class="form-control" value="@display" disabled />
-
+<!-- ===== Usuario (siempre readonly) ===== -->
+<div class="mb-3">
+    <label asp-for="UsuarioId" class="form-label">Usuario</label>
+    <input type="hidden" asp-for="UsuarioId" />
+    <input class="form-control" value="@displayUser" disabled />
     <span asp-validation-for="UsuarioId" class="text-danger"></span>
 </div>
 
+<!-- ===== Producto (readonly en Edit o si viene preseleccionado en Create) ===== -->
 <div class="mb-3">
     <label asp-for="ProductoId" class="form-label">Producto</label>
-    <select asp-for="ProductoId" class="form-select" asp-items="Model.Productos">
-        <option value="">-- Selecciona --</option>
-    </select>
+
+    @if (lockProduct)
+    {
+        <input type="hidden" asp-for="ProductoId" />
+        <input class="form-control" value="@productName" disabled />
+    }
+    else
+    {
+        <select asp-for="ProductoId" class="form-select" asp-items="Model.Productos">
+            <option value="">-- Selecciona --</option>
+        </select>
+    }
+
     <span asp-validation-for="ProductoId" class="text-danger"></span>
 </div>
 
+<!-- ===== Calificación con estrellas ===== -->
 <div class="mb-3">
     <label asp-for="Calificacion" class="form-label">Calificación</label>
 
@@ -47,12 +68,14 @@
     <span asp-validation-for="Calificacion" class="text-danger"></span>
 </div>
 
+<!-- ===== Comentario ===== -->
 <div class="mb-3">
     <label asp-for="Comentario" class="form-label">Comentario</label>
     <textarea asp-for="Comentario" class="form-control" rows="3"></textarea>
     <span asp-validation-for="Comentario" class="text-danger"></span>
 </div>
 
+<!-- ===== Fecha ===== -->
 <div class="mb-3">
     <label asp-for="FechaResena" class="form-label">Fecha</label>
     <input asp-for="FechaResena" class="form-control" type="datetime-local" />

@@ -15,6 +15,9 @@ namespace ClickMart.web.Services
         public Task<ResenaResponseDTO?> GetByIdAsync(int id, string? token = null) =>
             _api.GetAsync<ResenaResponseDTO>($"{Base}/{id}", token);
 
+        public Task<List<ResenaResponseDTO>?> GetByProductoAsync(int productoId, string? token = null) =>
+            _api.GetAsync<List<ResenaResponseDTO>>($"{Base}/producto/{productoId}", token);
+
         public Task<ResenaResponseDTO?> CreateAsync(ResenaCreateDTO dto, string token) =>
             _api.PostAsync<ResenaCreateDTO, ResenaResponseDTO>($"{Base}", dto, token);
 

@@ -1,4 +1,5 @@
 ﻿using ClickMart.web.DTOs.ProductoDTOs;
+using ClickMart.web.DTOs.ResenaDTOs; // <-- NUEVO (para tipos si los usas)
 using ClickMart.web.Helpers;
 using ClickMart.web.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -14,11 +15,13 @@ namespace ClickMart.web.Controllers
     {
         private readonly ProductoService _svc;
         private readonly CatalogoService _catalogo;
+        private readonly ResenaService _resenas; // <-- NUEVO
 
-        public ProductoController(ProductoService svc, CatalogoService catalogo)
+        public ProductoController(ProductoService svc, CatalogoService catalogo, ResenaService resenas) // <-- NUEVO
         {
             _svc = svc;
             _catalogo = catalogo;
+            _resenas = resenas; // <-- NUEVO
         }
 
         // GET /Producto
@@ -28,12 +31,23 @@ namespace ClickMart.web.Controllers
             var token = ClaimsHelper.GetToken(User);
             try
             {
-                var list = await _svc.GetAllAsync(token);
-                return View(list ?? new List<ProductoResponseDTO>());
+                var list = await _svc.GetAllAsync(token) ?? new List<ProductoResponseDTO>();
+
+                // === NUEVO: calcular calificación promedio por producto ===
+                var ratings = new Dictionary<int, double>();
+                foreach (var p in list)
+                {
+                    var resenas = await _resenas.GetByProductoAsync(p.ProductoId, token) ?? new List<ResenaResponseDTO>();
+                    ratings[p.ProductoId] = resenas.Count > 0 ? resenas.Average(r => r.Calificacion) : 0.0;
+                }
+                ViewBag.Ratings = ratings; // idProducto -> promedio
+
+                return View(list);
             }
             catch (Exception ex)
             {
                 ViewBag.Error = ex.Message;
+                ViewBag.Ratings = new Dictionary<int, double>(); // para evitar nulls en la vista
                 return View(new List<ProductoResponseDTO>());
             }
         }
@@ -190,7 +204,6 @@ namespace ClickMart.web.Controllers
             var distribuidores = await _catalogo.GetDistribuidoresAsync(token)
                                 ?? new List<ClickMart.web.DTOs.CatalogoDTOs.DistribuidorDTO>();
 
-            // Si tu API usa "Id" en lugar de "CategoriaId"/"DistribuidorId", cambia estas keys
             ViewBag.Categorias = new SelectList(categorias, "CategoriaId", "Nombre");
             ViewBag.Distribuidores = new SelectList(distribuidores, "DistribuidorId", "Nombre");
         }

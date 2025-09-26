@@ -32,7 +32,7 @@ namespace ClickMart.web.Controllers
 
         private async Task PopulateCombos(ResenaFormVM vm, string? token)
         {
-            // Solo productos; el autor está bloqueado
+            // Solo productos; el autor va bloqueado/readonly
             var prods = await _productos.GetAllAsync(token) ?? new List<ProductoResponseDTO>();
             vm.Productos = prods.Select(p => new SelectListItem
             {
@@ -65,8 +65,9 @@ namespace ClickMart.web.Controllers
             }
         }
 
+        // ====== CAMBIO: acepta productoId para preseleccionar desde Productos ======
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? productoId)
         {
             var token = ClaimsHelper.GetToken(User);
 
@@ -74,10 +75,11 @@ namespace ClickMart.web.Controllers
             {
                 Calificacion = 5,
                 FechaResena = DateTime.UtcNow,
-                UsuarioEmail = GetEmail()
+                UsuarioEmail = GetEmail(),
+                ProductoId = productoId ?? 0 // preselección si viene desde Productos
             };
 
-            // Resolver UsuarioId por email para pasar validación del VM
+            // Resolver UsuarioId por email (precargado para el form y validación)
             if (!string.IsNullOrWhiteSpace(vm.UsuarioEmail))
             {
                 var users = await _usuarios.GetAllAsync(token) ?? new List<UsuarioListadoDTO>();
@@ -100,8 +102,7 @@ namespace ClickMart.web.Controllers
         {
             var token = ClaimsHelper.GetToken(User);
 
-            // Reforzar en servidor: recalcular UsuarioId a partir del email de la sesión
-            // (evita manipulación del hidden)
+            // Reforzar en servidor: recalcular el autor por email de la sesión (anti-manipulación)
             var email = GetEmail();
             if (!string.IsNullOrWhiteSpace(email))
             {
@@ -124,7 +125,7 @@ namespace ClickMart.web.Controllers
             {
                 var dto = new ResenaCreateDTO
                 {
-                    UsuarioId = vm.UsuarioId, // el backend también lo forzará
+                    UsuarioId = vm.UsuarioId, // el backend también lo fuerza desde el token
                     ProductoId = vm.ProductoId,
                     Calificacion = vm.Calificacion,
                     Comentario = vm.Comentario,

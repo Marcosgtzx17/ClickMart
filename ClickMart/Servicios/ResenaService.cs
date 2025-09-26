@@ -1,7 +1,6 @@
 ﻿using ClickMart.DTOs.ResenaDTOs;
 using ClickMart.Entidades;
 using ClickMart.Interfaces;
-using ClickMart.Servicios;
 
 namespace ClickMart.Servicios
 {
@@ -17,6 +16,13 @@ namespace ClickMart.Servicios
         {
             var x = await _repo.GetByIdAsync(id);
             return x is null ? null : Map(x);
+        }
+
+        // ===== NUEVO: reseñas por producto =====
+        public async Task<List<ResenaResponseDTO>> GetByProductoAsync(int productoId)
+        {
+            var list = await _repo.GetByProductoAsync(productoId) ?? new List<Resena>();
+            return list.Select(Map).ToList();
         }
 
         public async Task<ResenaResponseDTO> CreateAsync(ResenaCreateDTO dto)

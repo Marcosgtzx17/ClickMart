@@ -35,11 +35,14 @@ public class ResenaController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetAll() => Ok(await _svc.GetAllAsync());
 
-    // Público: por producto (si tu servicio expone esta consulta)
+    // Público: reseñas por producto
     [HttpGet("producto/{productoId:int}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetByProducto(int productoId)
-        => Ok(await _svc.GetByIdAsync(productoId)); // <-- ajusta si tu interfaz usa otro nombre
+    {
+        var list = await _svc.GetByProductoAsync(productoId); // <-- CORRECTO
+        return Ok(list);
+    }
 
     [HttpGet("{id:int}")]
     [AllowAnonymous]
@@ -55,13 +58,13 @@ public class ResenaController : ControllerBase
     [Authorize(Roles = "Cliente,Admin")]
     public async Task<IActionResult> Create([FromBody] ResenaCreateDTO dto)
     {
-        // Fuerza SIEMPRE el autor autenticado, sin excepción (incluye Admin)
+        // Fuerza SIEMPRE el autor autenticado (incluye Admin)
         var uid = GetUserId();
         if (uid is null) return Unauthorized();
 
         dto.UsuarioId = uid.Value;
 
-        // (Opcional) Validación de compra previa
+        // (Opcional) Validar compra previa antes de permitir reseña
         // var compro = await _pedidos.UsuarioComproProductoAsync(uid.Value, dto.ProductoId);
         // if (!compro) return BadRequest(new { message = "Debe haber comprado el producto para reseñarlo." });
 

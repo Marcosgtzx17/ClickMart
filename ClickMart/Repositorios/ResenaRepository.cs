@@ -1,7 +1,9 @@
 ﻿using ClickMart.Entidades;
 using ClickMart.Interfaces;
-using ClickMart.Repositorios;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ClickMart.Repositorios
 {
@@ -15,6 +17,13 @@ namespace ClickMart.Repositorios
 
         public Task<Resena?> GetByIdAsync(int id)
             => _ctx.Set<Resena>().FindAsync(id).AsTask();
+
+        // === NUEVO ===
+        public async Task<List<Resena>> GetByProductoAsync(int productoId)
+            => await _ctx.Set<Resena>()
+                         .AsNoTracking()
+                         .Where(r => r.ProductoId == productoId)
+                         .ToListAsync();
 
         public async Task<Resena> AddAsync(Resena entity)
         {
