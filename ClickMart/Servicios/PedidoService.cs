@@ -67,22 +67,32 @@ namespace ClickMart.Servicios
 
         public Task<bool> DeleteAsync(int id) => _repo.DeleteAsync(id);
 
+ 
         public async Task<decimal> RecalcularTotalAsync(int pedidoId)
         {
-            // Detalles con Producto (precio disponible)
             var detalles = await _detRepo.GetByPedidoAsync(pedidoId);
 
             decimal total = 0m;
+
             foreach (var d in detalles)
             {
+                // 1) Si guardas Subtotal en DB (decimal?), úsalo.
+                var sub = d.Subtotal ?? 0m;
+                if (sub > 0m)
+                {
+                    total += sub;
+                    continue;
+                }
+
+                // 2) Si no hay Subtotal, usa el precio del producto (si está cargado) * cantidad.
                 var precio = d.Producto?.Precio ?? 0m;
-                var sub = precio * d.Cantidad;
+                if (precio > 0m && d.Cantidad > 0)
+                {
+                    total += precio * d.Cantidad;
+                    continue;
+                }
 
-                // si tienes columna SUBTOTAL y quieres persistirla:
-                d.Subtotal = sub;
-                await _detRepo.UpdateAsync(d);
-
-                total += sub;
+                // Si nada aplica, este detalle aporta 0 (no lanzamos excepción).
             }
 
             var pedido = await _repo.GetByIdAsync(pedidoId)
@@ -93,6 +103,7 @@ namespace ClickMart.Servicios
 
             return total;
         }
+
 
         public async Task<bool> MarcarPagadoAsync(int pedidoId)
         {

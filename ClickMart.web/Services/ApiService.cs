@@ -33,6 +33,7 @@ namespace ClickMart.web.Services
             return client;
         }
 
+
         private static string? ExtractApiErrorMessage(string json)
         {
             try

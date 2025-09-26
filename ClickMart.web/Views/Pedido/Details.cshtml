@@ -1,0 +1,197 @@
+﻿@using ClickMart.web.DTOs.DetallePedidoDTOs
+@using ClickMart.web.DTOs.ProductoDTOs
+@model ClickMart.web.DTOs.PedidoDTOs.PedidoResponseDTO
+
+@{
+    ViewData["Title"] = $"Pedido #{Model.PedidoId}";
+    var detalles = ViewBag.Detalles as List<DetallePedidoResponseDTO> ?? new();
+    var productos = ViewBag.Productos as List<ProductoLiteDTO> ?? new();
+    var newDetalle = ViewBag.NewDetalle as DetallePedidoCreateDTO ?? new DetallePedidoCreateDTO { IdPedido = Model.PedidoId, Cantidad = 1 };
+
+    // Fallback de total por si Model.Total no está actualizado aún.
+    decimal totalCalculado = detalles.Any()
+        ? detalles.Sum(x => (decimal?)x.Subtotal ?? 0m)
+        : (Model.Total ?? 0m);
+}
+
+<!-- Avisos globales -->
+@if (TempData["Success"] is string okMsg)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @okMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Warn"] is string warnMsg)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @warnMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] is string errMsg)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @errMsg
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Pedido #@Model.PedidoId</h2>
+    <div class="d-flex gap-2">
+        <form asp-action="RecalcularTotal" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.PedidoId" />
+            <button type="submit" class="btn btn-outline-primary btn-sm">Recalcular total</button>
+        </form>
+        <a asp-action="Edit" asp-route-id="@Model.PedidoId" class="btn btn-warning btn-sm">Editar</a>
+        <a asp-action="Index" class="btn btn-secondary btn-sm">Volver</a>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <strong>Usuario:</strong><br /> @Model.UsuarioId
+            </div>
+            <div class="col-md-3">
+                <strong>Fecha:</strong><br /> @Model.Fecha.ToString("yyyy-MM-dd")
+            </div>
+            <div class="col-md-3">
+                <strong>Método:</strong><br /> @Model.MetodoPago
+            </div>
+            <div class="col-md-3">
+                <strong>Pago:</strong><br /> @Model.PagoEstado
+            </div>
+            <div class="col-md-3">
+                <strong>Tarjeta (últimos 4):</strong><br /> @(Model.TarjetaUltimos4 ?? "-")
+            </div>
+            <div class="col-md-3">
+                <strong>Total:</strong><br /> @totalCalculado.ToString("C")
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Detalles ===== -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header fw-bold">Detalles</div>
+            <div class="card-body p-0">
+                @if (!detalles.Any())
+                {
+                    <div class="p-3">No hay detalles aún.</div>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Subtotal</th>
+                                <th style="width: 160px"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in detalles)
+                            {
+                                var precio = (decimal?)d.PrecioUnitario ?? 0m;
+                                var subtotal = (decimal?)d.Subtotal ?? (precio * d.Cantidad);
+                                <tr>
+                                    <td>@d.DetalleId</td>
+                                    <td>@(d.ProductoNombre ?? $"ID {d.IdProducto}")</td>
+                                    <td>@d.Cantidad</td>
+                                    <td>@precio.ToString("C")</td>
+                                    <td>@subtotal.ToString("C")</td>
+                                    <td class="text-end">
+                                        <form asp-action="UpdateDetalle" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                                            <input type="hidden" name="DetalleId" value="@d.DetalleId" />
+                                            <input type="number" name="Cantidad" value="@d.Cantidad" min="1" class="form-control form-control-sm d-inline-block me-1" style="width: 80px" />
+                                            <button class="btn btn-sm btn-warning">Actualizar</button>
+                                        </form>
+
+                                        <form asp-action="DeleteDetalle" method="post" class="d-inline ms-1">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                                            <input type="hidden" name="id" value="@d.DetalleId" />
+                                            <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar detalle?')">Borrar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="4" class="text-end">Total</th>
+                                <th>@totalCalculado.ToString("C")</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Agregar detalle -->
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header fw-bold">Agregar detalle</div>
+            <div class="card-body">
+                <form asp-action="AddDetalle" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="IdPedido" value="@newDetalle.IdPedido" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Producto</label>
+                        <select name="IdProducto" class="form-select" required>
+                            <option value="">-- Selecciona --</option>
+                            @foreach (var p in productos)
+                            {
+                                <option value="@p.ProductoId">@p.Nombre (@p.Precio.ToString("C"))</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" name="Cantidad" class="form-control" value="@newDetalle.Cantidad" min="1" required />
+                    </div>
+
+                    <div class="d-grid">
+                        <button class="btn btn-primary">Agregar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pago -->
+        <div class="card">
+            <div class="card-header fw-bold">Pago</div>
+            <div class="card-body">
+                <form asp-action="GenerarCodigo" method="post" class="mb-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.PedidoId" />
+                    <button class="btn btn-outline-success w-100">Generar código</button>
+                </form>
+
+                <form asp-action="Confirmar" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.PedidoId" />
+                    <div class="input-group">
+                        <input name="Codigo" class="form-control" placeholder="Código de confirmación" />
+                        <button class="btn btn-success">Confirmar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,45 @@
+﻿@model ClickMart.web.DTOs.PedidoDTOs.PedidoUpdateDTO
+@{
+    ViewData["Title"] = "Editar pedido";
+}
+
+<h2>Editar pedido #@Model.PedidoId</h2>
+<hr />
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="PedidoId" />
+
+    <div class="mb-3">
+        <label asp-for="Fecha" class="form-label">Fecha</label>
+        <input asp-for="Fecha" type="date" class="form-control" />
+        <span asp-validation-for="Fecha" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MetodoPago" class="form-label">Método de pago</label>
+        <select asp-for="MetodoPago" class="form-select">
+            <option value="0">EFECTIVO</option>
+            <option value="1">TARJETA</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PagoEstado" class="form-label">Estado de pago</label>
+        <select asp-for="PagoEstado" class="form-select">
+            <option value="0">PENDIENTE</option>
+            <option value="1">PAGADO</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="NumeroTarjeta" class="form-label">Número de tarjeta (si TARJETA)</label>
+        <input asp-for="NumeroTarjeta" class="form-control" />
+        <span asp-validation-for="NumeroTarjeta" class="text-danger"></span>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-warning">Guardar</button>
+        <a asp-action="Details" asp-route-id="@Model.PedidoId" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>

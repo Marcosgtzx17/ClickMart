@@ -1,0 +1,35 @@
+﻿@model ClickMart.web.DTOs.PedidoDTOs.PedidoResponseDTO
+@{
+    ViewData["Title"] = "Eliminar pedido";
+}
+
+<h2>Eliminar pedido #@Model.PedidoId</h2>
+<hr />
+
+<div class="alert alert-warning">
+    ¿Confirmas eliminar este pedido? Esta acción no se puede deshacer.
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Usuario</dt>
+    <dd class="col-sm-9">@Model.UsuarioId</dd>
+
+    <dt class="col-sm-3">Total</dt>
+    <dd class="col-sm-9">@((Model.Total ?? 0m).ToString("C"))</dd>
+
+    <dt class="col-sm-3">Fecha</dt>
+    <dd class="col-sm-9">@Model.Fecha.ToString("yyyy-MM-dd")</dd>
+
+    <dt class="col-sm-3">Pago</dt>
+    <dd class="col-sm-9">@Model.PagoEstado</dd>
+</dl>
+
+<form asp-action="DeleteConfirmed" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.PedidoId" />
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
