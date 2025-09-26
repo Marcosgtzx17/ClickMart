@@ -1,8 +1,10 @@
 ﻿using System.Globalization;
-using System.Linq; // Sum, Select
+using System.Linq;
+using System.IO;
 using ClickMart.DTOs.FacturaDTOs;
 using ClickMart.Entidades;
 using ClickMart.Interfaces;
+using Microsoft.AspNetCore.Hosting;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -15,17 +17,20 @@ namespace ClickMart.Servicios
         private readonly IDetallePedidoRepository _detalles;
         private readonly IProductoRepository _productos;
         private readonly IUsuarioRepository _usuarios;
+        private readonly IWebHostEnvironment _env;
 
         public FacturaService(
             IPedidoRepository pedidos,
             IDetallePedidoRepository detalles,
             IProductoRepository productos,
-            IUsuarioRepository usuarios)
+            IUsuarioRepository usuarios,
+            IWebHostEnvironment env)
         {
             _pedidos = pedidos;
             _detalles = detalles;
             _productos = productos;
             _usuarios = usuarios;
+            _env = env;
         }
 
         public async Task<byte[]?> GenerarFacturaPdfAsync(int pedidoId)
@@ -33,16 +38,28 @@ namespace ClickMart.Servicios
             var pedido = await _pedidos.GetByIdAsync(pedidoId);
             if (pedido is null) return null;
 
+            // Nombre exacto del cliente (como en tu versión previa)
             var usuario = await _usuarios.GetByIdAsync(pedido.UsuarioId);
-            var detalles = await _detalles.GetByPedidoAsync(pedidoId);
+            var nombreCliente = usuario?.Nombre?.Trim();
+            if (string.IsNullOrWhiteSpace(nombreCliente))
+                nombreCliente = pedido.Usuario?.Nombre ?? $"Usuario {pedido.UsuarioId}";
 
-            // Traemos info de producto para nombre y precio unitario
+            // Detalles del pedido
+            var detalles = await _detalles.GetByPedidoAsync(pedido.PedidoId);
+            if (detalles is null || detalles.Count == 0) return null;
+
+            // Precarga de productos e imágenes
             var prodIds = detalles.Select(d => d.IdProducto).Distinct().ToList();
             var dictProductos = new Dictionary<int, Productos>();
+            var dictImagenes = new Dictionary<int, byte[]?>();
+
             foreach (var id in prodIds)
             {
                 var p = await _productos.GetByIdAsync(id);
                 if (p != null) dictProductos[id] = p;
+
+                var img = await _productos.GetImagenAsync(id);
+                dictImagenes[id] = img;
             }
 
             var items = detalles.Select(d =>
@@ -50,17 +67,16 @@ namespace ClickMart.Servicios
                 var tiene = dictProductos.TryGetValue(d.IdProducto, out var prod);
 
                 decimal precioUnitario = tiene
-                    ? ToDecimal(prod!.Precio)                                          // <-- NO ‘??’ directo
+                    ? ToDecimal(prod!.Precio)
                     : (d.Cantidad > 0 ? ToDecimal(d.Subtotal) / d.Cantidad : 0m);
-
-                decimal subtotal = ToDecimal(d.Subtotal);                               // <-- normalizado
 
                 return new FacturaItemDTO
                 {
                     Producto = tiene ? prod!.Nombre : $"Producto {d.IdProducto}",
                     Cantidad = d.Cantidad,
                     PrecioUnitario = precioUnitario,
-                    Subtotal = subtotal
+                    Subtotal = ToDecimal(d.Subtotal),
+                    ImagenProducto = dictImagenes.TryGetValue(d.IdProducto, out var img) ? img : null
                 };
             }).ToList();
 
@@ -68,7 +84,7 @@ namespace ClickMart.Servicios
             {
                 PedidoId = pedido.PedidoId,
                 FechaEmision = DateTime.Now, // o pedido.Fecha
-                Usuario = usuario?.Nombre ?? $"Usuario {pedido.UsuarioId}",
+                Usuario = nombreCliente,
                 Total = items.Sum(i => i.Subtotal),
                 Items = items
             };
@@ -76,13 +92,27 @@ namespace ClickMart.Servicios
             return GenerarPdf(factura);
         }
 
-        // Helper para unificar decimal? -> decimal
+        // === Helpers ===
         private static decimal ToDecimal(decimal? value) => value ?? 0m;
 
-        private static byte[] GenerarPdf(FacturaDTO m)
+        private byte[]? LoadLogo()
+        {
+            try
+            {
+                var basePath = _env.WebRootPath ?? _env.ContentRootPath;
+                var path = Path.Combine(basePath, "img", "clickmart-logo.png");
+                return File.Exists(path) ? File.ReadAllBytes(path) : null;
+            }
+            catch { return null; }
+        }
+
+        private byte[] GenerarPdf(FacturaDTO m)
         {
             var culture = new CultureInfo("es-ES");
-
+            var logo = LoadLogo();
+            culture.NumberFormat.CurrencySymbol = "$";                // redundante aquí, pero explícito
+            culture.NumberFormat.CurrencyPositivePattern = 0;         // $n
+            culture.NumberFormat.CurrencyNegativePattern = 1;         // -$n
             byte[] pdf = Document.Create(doc =>
             {
                 doc.Page(page =>
@@ -90,39 +120,50 @@ namespace ClickMart.Servicios
                     page.Size(PageSizes.A4);
                     page.Margin(28);
 
+                    // ===== HEADER: Logo + Info de factura =====
                     page.Header().Row(row =>
                     {
-                        row.RelativeItem().Text("ClickMart")
-                            .Bold().FontSize(20);
+                        row.ConstantItem(150).Height(60).AlignLeft().Column(col =>
+                        {
+                            if (logo is not null && logo.Length > 0)
+                                col.Item().Image(logo).FitArea();
+                            else
+                                col.Item().Text("ClickMart").Bold().FontSize(22);
+                        });
+
                         row.RelativeItem().AlignRight().Column(col =>
                         {
-                            col.Item().Text($"Factura N° {m.PedidoId}").SemiBold();
+                            col.Item().Text($"Factura N° {m.PedidoId}").SemiBold().FontSize(12);
                             col.Item().Text($"Fecha de emisión: {m.FechaEmision:yyyy-MM-dd HH:mm}");
                         });
                     });
 
+                    // ===== CONTENT =====
                     page.Content().Column(col =>
                     {
-                        col.Spacing(10); // spacing en la columna
+                        col.Spacing(10);
 
                         col.Item().Text($"Cliente: {m.Usuario}").FontSize(12);
 
-                        // línea separadora (sin .Spacing aquí)
-                        col.Item().LineHorizontal(0.75f);
+                        // Separador con color de marca
+                        col.Item().Border(0.5f).Background(Colors.Purple.Lighten4).Height(2);
 
+                        // Tabla con miniatura de producto
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(c =>
                             {
-                                c.RelativeColumn(6); // Producto
-                                c.RelativeColumn(2); // Cantidad
-                                c.RelativeColumn(2); // Precio
-                                c.RelativeColumn(2); // Subtotal
+                                c.ConstantColumn(58); // Img
+                                c.RelativeColumn(4);  // Producto
+                                c.RelativeColumn(1);  // Cantidad
+                                c.RelativeColumn(2);  // Precio
+                                c.RelativeColumn(2);  // Subtotal
                             });
 
                             // Encabezado
                             table.Header(h =>
                             {
+                                h.Cell().Element(HeaderCell).Text("Img");
                                 h.Cell().Element(HeaderCell).Text("Producto");
                                 h.Cell().Element(HeaderCell).AlignRight().Text("Cantidad");
                                 h.Cell().Element(HeaderCell).AlignRight().Text("Precio");
@@ -132,6 +173,18 @@ namespace ClickMart.Servicios
                             // Filas
                             foreach (var it in m.Items)
                             {
+                                // Img (placeholder si no hay)
+                                table.Cell().Element(c =>
+                                    BodyCell(c).MinHeight(48).MinWidth(48).Padding(2)
+                                               .Border(0.5f).AlignCenter().AlignMiddle()
+                                ).Element(e =>
+                                {
+                                    if (it.ImagenProducto is not null && it.ImagenProducto.Length > 0)
+                                        e.Image(it.ImagenProducto).FitArea();
+                                    else
+                                        e.Text("—").Light().FontSize(8);
+                                });
+
                                 table.Cell().Element(BodyCell).Text(it.Producto);
                                 table.Cell().Element(BodyCell).AlignRight().Text(it.Cantidad.ToString());
                                 table.Cell().Element(BodyCell).AlignRight().Text(it.PrecioUnitario.ToString("C", culture));
@@ -143,6 +196,7 @@ namespace ClickMart.Servicios
                             .Bold().FontSize(14);
                     });
 
+                    // ===== FOOTER =====
                     page.Footer().AlignCenter().Text("Gracias por su compra").FontSize(10).Light();
                 });
             }).GeneratePdf();
