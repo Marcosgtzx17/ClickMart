@@ -11,7 +11,7 @@ namespace ClickMart.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Cliente,Admin")]
+    [Authorize(Roles = "Cliente,Administrador")]
     public class PedidoController : ControllerBase
     {
         private readonly IPedidoService _pedidos;
@@ -27,7 +27,7 @@ namespace ClickMart.Api.Controllers
 
         // SOLO Admin: ver todos
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Administrador")]
         public async Task<ActionResult<List<PedidoResponseDTO>>> GetAll() =>
             Ok(await _pedidos.GetAllAsync());
 
@@ -40,15 +40,28 @@ namespace ClickMart.Api.Controllers
             return Ok(await _pedidos.GetByUsuarioAsync(uid.Value));
         }
 
+        // API/Controllers/PedidoController.cs
+        [Authorize]
         [HttpGet("{id:int}")]
         public async Task<ActionResult<PedidoResponseDTO>> GetById(int id)
         {
+            var isAdmin = User.IsInRole("Admin")
+                       || User.IsInRole("Administrador")
+                       || User.IsInRole("administrador");
+
+            // Trae el DTO desde el servicio
             var dto = await _pedidos.GetByIdAsync(id);
             if (dto is null) return NotFound();
 
-            if (!User.IsAdmin() && User.GetUserId() != dto.UsuarioId) return Forbid();
-            return Ok(dto);
+            // Si NO es admin, solo puede ver su propio pedido
+            var userId = User.GetUserId();              // extensión que ya importaste de ClickMart.Utils
+            if (!isAdmin && (userId is null || dto.UsuarioId != userId.Value))
+                return Forbid();                        // 403
+
+            return Ok(dto);                             // devolvemos el DTO tal cual
         }
+
+
 
         [HttpPost]
         public async Task<ActionResult<PedidoResponseDTO>> Create([FromBody] PedidoCreateDTO dto)

@@ -8,19 +8,35 @@ namespace ClickMart.web.Helpers
     {
         public static ClaimsPrincipal BuildPrincipalFromAuth(UsuarioRespuestaDTO auth)
         {
+            var rolOriginal = (auth.Rol ?? "").Trim();
+            var rolNorm = rolOriginal.ToLowerInvariant(); // "administrador", "admin", etc.
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name,  auth.Nombre ?? string.Empty),
                 new Claim(ClaimTypes.Email, auth.Email  ?? string.Empty),
-                new Claim(ClaimTypes.Role,  string.IsNullOrWhiteSpace(auth.Rol) ? "Usuario" : auth.Rol),
-                new Claim("token",          auth.Token  ?? string.Empty)
+
+                // Mantén el rol original…
+                new Claim(ClaimTypes.Role, rolOriginal),
+
+                // …y añade uno normalizado para que IsInRole/nuestros checks no fallen.
+                new Claim(ClaimTypes.Role, rolNorm),
+
+                // Alias útil si en algún sitio lees "rol"
+                new Claim("rol", rolNorm),
+
+                // token de la API
+                new Claim("token", auth.Token ?? string.Empty),
             };
+
             var identity = new ClaimsIdentity(claims, "AuthCookie");
             return new ClaimsPrincipal(identity);
         }
 
         public static string? GetToken(ClaimsPrincipal user) =>
             user?.Claims?.FirstOrDefault(c => c.Type == "token")?.Value;
+    
+
 
         /// <summary>
         /// Devuelve true solo si PODEMOS leer el JWT y su exp ya pasó (con holgura).

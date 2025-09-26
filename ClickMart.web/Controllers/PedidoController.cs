@@ -41,48 +41,83 @@ namespace ClickMart.web.Controllers
             return string.IsNullOrWhiteSpace(token) || ClaimsHelper.IsJwtExpired(token);
         }
 
-        private static bool EsAdmin(ClaimsPrincipal u) =>
-            u.IsInRole("Admin") || u.IsInRole("Administrador") || u.IsInRole("adminitrador");
+        private static bool EsAdmin(ClaimsPrincipal u)
+        {
+            var roles = u.FindAll(ClaimTypes.Role)
+                         .Select(c => c.Value?.Trim().ToLowerInvariant())
+                         .Where(v => !string.IsNullOrWhiteSpace(v));
+
+            // acepta "admin", "administrador", "administrator"
+            return roles.Any(r => r == "admin" || r == "administrador" || r == "administrator");
+        }
+
+
 
         // ========== LISTADO ==========
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
+            var token = ClaimsHelper.GetToken(User);
+            if (string.IsNullOrWhiteSpace(token)) return RedirectToAction("Login", "Auth");
 
             try
             {
-                var data = EsAdmin(User)
-                    ? (await _svc.GetAllAsync(token!) ?? new List<PedidoResponseDTO>())
-                    : (await _svc.GetMineAsync(token!) ?? new List<PedidoResponseDTO>());
+                var esAdmin = EsAdmin(User);
+                ViewBag.EsAdmin = esAdmin;
+
+                var data = esAdmin
+                    ? (await _svc.GetAllAsync(token) ?? new List<PedidoResponseDTO>())
+                    : (await _svc.GetMineAsync(token) ?? new List<PedidoResponseDTO>());
+
+                //TempData["Warn"] = $"Modo {(esAdmin ? "ADMIN (GetAllAsync)" : "CLIENTE (GetMineAsync)")}. Roles: {string.Join(",", User.FindAll(ClaimTypes.Role).Select(r => r.Value))}";
+
                 return View(data);
+            }
+            catch (ApiHttpException ex)
+            {
+                // Si tu token no tiene permiso para GetAll, verás 401/403 aquí.
+                TempData["Error"] = $"No se pudieron cargar los pedidos: {ex.Message}";
+                return View(new List<PedidoResponseDTO>());
             }
             catch (Exception ex)
             {
-                ViewBag.Error = $"No se pudieron cargar los pedidos: {ex.Message}";
+                TempData["Error"] = $"No se pudieron cargar los pedidos: {ex.Message}";
                 return View(new List<PedidoResponseDTO>());
             }
         }
 
-        // ========== DETALLE ==========
+
+
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
+            var token = ClaimsHelper.GetToken(User);
+            if (string.IsNullOrWhiteSpace(token)) return RedirectToAction("Login", "Auth");
 
-            var p = await _svc.GetByIdAsync(id, token!);
-            if (p is null) return NotFound();
+            try
+            {
+                var p = await _svc.GetByIdAsync(id, token);
+                if (p is null) return NotFound();
 
-            var detalles = await _detSvc.GetByPedidoAsync(id, token!) ?? new List<DetallePedidoResponseDTO>();
-            ViewBag.Detalles = detalles;
+                var detalles = await _detSvc.GetByPedidoAsync(id, token) ?? new List<DetallePedidoResponseDTO>();
+                ViewBag.Detalles = detalles;
+                ViewBag.NewDetalle = new DetallePedidoCreateDTO { IdPedido = id, Cantidad = 1 };
+                ViewBag.Productos = await _prodSvc.GetAllAsync(token) ?? new List<ProductoLiteDTO>();
 
-            ViewBag.NewDetalle = new DetallePedidoCreateDTO { IdPedido = id, Cantidad = 1 };
-
-            var productos = await _prodSvc.GetAllAsync(token!) ?? new List<ProductoLiteDTO>();
-            ViewBag.Productos = productos;
-
-            return View(p);
+                return View(p);
+            }
+            catch (ApiHttpException ex) when (ex.StatusCode == HttpStatusCode.Forbidden)
+            {
+                TempData["Error"] = "No tienes permisos para ver ese pedido.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (ApiHttpException ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
+
 
         // ========== CREATE ==========
         [HttpGet]
