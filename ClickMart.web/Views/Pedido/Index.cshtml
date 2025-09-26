@@ -1,0 +1,58 @@
+﻿@model List<ClickMart.web.DTOs.PedidoDTOs.PedidoResponseDTO>
+@{
+    ViewData["Title"] = "Pedidos";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Pedidos</h2>
+    <a asp-action="Create" class="btn btn-primary">Nuevo pedido</a>
+</div>
+
+@if (TempData["Success"] is string s)
+{
+    <div class="alert alert-success">@s</div>
+}
+@if (TempData["Error"] is string e)
+{
+    <div class="alert alert-danger">@e</div>
+}
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">No hay pedidos registrados.</div>
+}
+else
+{
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Total</th>
+                <th>Fecha</th>
+                <th>Método</th>
+                <th>Pago</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.PedidoId</td>
+                    <td>@p.UsuarioId</td>
+                    <td>@(p.Total?.ToString("C") ?? "-")</td>
+                    <td>@p.Fecha.ToString("yyyy-MM-dd")</td>
+                    <td>@p.MetodoPago</td>
+                    <td>@p.PagoEstado</td>
+                    <td class="text-end">
+                        <a asp-action="Details" asp-route-id="@p.PedidoId" class="btn btn-sm btn-info">Ver</a>
+                        <a asp-action="Edit" asp-route-id="@p.PedidoId" class="btn btn-sm btn-warning">Editar</a>
+                        <a asp-action="Delete" asp-route-id="@p.PedidoId" class="btn btn-sm btn-danger">Borrar</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+

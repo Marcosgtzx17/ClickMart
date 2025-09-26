@@ -57,6 +57,12 @@ builder.Services.AddScoped<ClickMart.web.Services.CatalogoService>();
 builder.Services.AddScoped<ClickMart.web.Services.UsuarioService>();
 builder.Services.AddScoped<ClickMart.web.Services.RolService>();
 builder.Services.AddScoped<ClickMart.web.Services.ResenaService>();
+builder.Services.AddScoped<ClickMart.web.Services.PedidoService>();
+builder.Services.AddScoped<ClickMart.web.Services.DetallePedidoService>();
+builder.Services.AddScoped<ClickMart.web.Services.UsuarioApiService>();
+builder.Services.AddScoped<ClickMart.web.Services.ProductoCatalogService>();
+
+
 
 
 var app = builder.Build();

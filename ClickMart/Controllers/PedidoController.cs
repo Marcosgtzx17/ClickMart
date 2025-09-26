@@ -2,9 +2,10 @@
 using ClickMart.DTOs.PedidoDTOs;
 using ClickMart.Entidades;
 using ClickMart.Interfaces;
-using ClickMart.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ClickMart.Utils;        
+using System.Security.Claims; 
 
 namespace ClickMart.Api.Controllers
 {
@@ -104,6 +105,7 @@ namespace ClickMart.Api.Controllers
             return Ok(new { pedidoId = id, total });
         }
 
+        // POST /api/pedido/{id}/generar-codigo
         [HttpPost("{id:int}/generar-codigo")]
         public async Task<ActionResult<CodigoConfirmacionResponseDTO>> GenerarCodigoParaPedido(int id)
         {
@@ -114,15 +116,15 @@ namespace ClickMart.Api.Controllers
             if (pedido.PagoEstado != EstadoPago.PENDIENTE || (pedido.Total ?? 0m) <= 0m)
                 return BadRequest(new { message = "Pedido no listo para generar código." });
 
-            var email = User.FindFirst("email")?.Value
-                     ?? User.FindFirst("sub")?.Value
-                     ?? string.Empty;
-            if (string.IsNullOrEmpty(email)) return Unauthorized();
+            var email = User.GetEmail();           
+            if (string.IsNullOrWhiteSpace(email))
+                return Unauthorized(new { message = "No se encontró el correo en el token." });
 
             var dto = await _codigos.GenerarAsync(email);
             return Ok(dto);
         }
 
+        // POST /api/pedido/{id}/confirmar
         [HttpPost("{id:int}/confirmar")]
         public async Task<IActionResult> ConfirmarPago(int id, [FromBody] CodigoValidarDTO dto)
         {
@@ -130,10 +132,9 @@ namespace ClickMart.Api.Controllers
             if (pedido is null) return NotFound();
             if (!User.IsAdmin() && User.GetUserId() != pedido.UsuarioId) return Forbid();
 
-            var email = User.FindFirst("email")?.Value
-                     ?? User.FindFirst("sub")?.Value
-                     ?? string.Empty;
-            if (string.IsNullOrEmpty(email)) return Unauthorized();
+            var email = User.GetEmail();          
+            if (string.IsNullOrWhiteSpace(email))
+                return Unauthorized(new { message = "No se encontró el correo en el token." });
 
             var valid = await _codigos.ValidarAsync(email, dto.Codigo);
             if (!valid) return BadRequest(new { message = "Código inválido o expirado." });

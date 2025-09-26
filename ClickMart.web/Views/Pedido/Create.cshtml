@@ -1,0 +1,95 @@
+﻿@model ClickMart.web.Models.PedidoCreateVM
+@{
+    ViewData["Title"] = "Nuevo pedido";
+    var esAdmin = (bool)(ViewBag.EsAdmin ?? false);
+}
+
+<h2>Nuevo pedido</h2>
+<hr />
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<form asp-action="Create" method="post" id="formPedido">
+    @Html.AntiForgeryToken()
+
+    @if (esAdmin)
+    {
+        <div class="mb-3">
+            <label class="form-label">Usuario</label>
+            <select asp-for="Pedido.UsuarioId" asp-items="Model.Usuarios" class="form-select">
+                <option value="">-- seleccione --</option>
+            </select>
+            <span asp-validation-for="Pedido.UsuarioId" class="text-danger"></span>
+        </div>
+    }
+
+    <div class="mb-3">
+        <label class="form-label">Fecha</label>
+        <input asp-for="Pedido.Fecha" class="form-control" type="date" />
+        <span asp-validation-for="Pedido.Fecha" class="text-danger"></span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Método de pago</label>
+            <select asp-for="Pedido.MetodoPago" class="form-select" id="metodoPago">
+                <option value="0">EFECTIVO</option>
+                <option value="1">TARJETA</option>
+            </select>
+            <small class="form-text text-muted">Si eliges TARJETA, deberás ingresar el número.</small>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Estado de pago</label>
+            <select class="form-select" disabled>
+                <option selected>PENDIENTE</option>
+            </select>
+            <input type="hidden" asp-for="Pedido.PagoEstado" />
+        </div>
+    </div>
+
+    <div class="mb-3 mt-3" id="grpTarjeta" style="display:none">
+        <label class="form-label">Número de tarjeta (si TARJETA)</label>
+        <input asp-for="Pedido.NumeroTarjeta" class="form-control" id="numeroTarjeta" inputmode="numeric" />
+        <small class="text-muted d-block">Se validará con Luhn en la API y sólo se guardan los últimos 4.</small>
+        <span asp-validation-for="Pedido.NumeroTarjeta" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary" id="btnCrear">Crear</button>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>
+
+@section Scripts {
+    <script>
+        (function () {
+            const metodo = document.getElementById('metodoPago');
+            const grp = document.getElementById('grpTarjeta');
+            const num = document.getElementById('numeroTarjeta');
+            const form = document.getElementById('formPedido');
+
+            function toggle() {
+                const isTarjeta = metodo.value === '1';
+                grp.style.display = isTarjeta ? 'block' : 'none';
+                if (!isTarjeta && num) num.value = '';
+            }
+            metodo.addEventListener('change', toggle);
+            toggle();
+
+            // Validación mínima en cliente: 12–19 dígitos si TARJETA
+            form.addEventListener('submit', function (e) {
+                if (metodo.value === '1') {
+                    if (!num.value || !/^\d{12,19}$/.test(num.value)) {
+                        e.preventDefault();
+                        const span = document.querySelector('[data-valmsg-for="Pedido.NumeroTarjeta"]');
+                        if (span) span.textContent = "Ingresa un número de tarjeta válido (12 a 19 dígitos).";
+                        num.focus();
+                    } else {
+                        const span = document.querySelector('[data-valmsg-for="Pedido.NumeroTarjeta"]');
+                        if (span) span.textContent = "";
+                    }
+                }
+            });
+        })();
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}
