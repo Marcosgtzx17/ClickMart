@@ -38,17 +38,15 @@ namespace ClickMart.Servicios
             var pedido = await _pedidos.GetByIdAsync(pedidoId);
             if (pedido is null) return null;
 
-            // Nombre exacto del cliente (como en tu versión previa)
             var usuario = await _usuarios.GetByIdAsync(pedido.UsuarioId);
             var nombreCliente = usuario?.Nombre?.Trim();
             if (string.IsNullOrWhiteSpace(nombreCliente))
                 nombreCliente = pedido.Usuario?.Nombre ?? $"Usuario {pedido.UsuarioId}";
 
-            // Detalles del pedido
             var detalles = await _detalles.GetByPedidoAsync(pedido.PedidoId);
             if (detalles is null || detalles.Count == 0) return null;
 
-            // Precarga de productos e imágenes
+            // Precarga productos + imágenes
             var prodIds = detalles.Select(d => d.IdProducto).Distinct().ToList();
             var dictProductos = new Dictionary<int, Productos>();
             var dictImagenes = new Dictionary<int, byte[]?>();
@@ -58,24 +56,34 @@ namespace ClickMart.Servicios
                 var p = await _productos.GetByIdAsync(id);
                 if (p != null) dictProductos[id] = p;
 
-                var img = await _productos.GetImagenAsync(id);
-                dictImagenes[id] = img;
+                dictImagenes[id] = await _productos.GetImagenAsync(id);
             }
 
+            // ===== FIX: Subtotal robusto (BD puede venir 0/null) =====
             var items = detalles.Select(d =>
             {
-                var tiene = dictProductos.TryGetValue(d.IdProducto, out var prod);
+                dictProductos.TryGetValue(d.IdProducto, out var prod);
 
-                decimal precioUnitario = tiene
-                    ? ToDecimal(prod!.Precio)
+                // Precio unitario: preferimos el del producto; si no hay, derivamos del subtotal de BD
+                var precioUnitario = prod != null
+                    ? ToDecimal(prod.Precio)
                     : (d.Cantidad > 0 ? ToDecimal(d.Subtotal) / d.Cantidad : 0m);
+
+                // Subtotal: si en BD viene 0/null, calculamos Cantidad * PrecioUnitario
+                var subtotalDb = ToDecimal(d.Subtotal);
+                var subtotalCalc = precioUnitario * d.Cantidad;
+                var subtotal = subtotalDb > 0m ? subtotalDb : subtotalCalc;
+
+                // Redondeo contable
+                precioUnitario = RoundMoney(precioUnitario);
+                subtotal = RoundMoney(subtotal);
 
                 return new FacturaItemDTO
                 {
-                    Producto = tiene ? prod!.Nombre : $"Producto {d.IdProducto}",
+                    Producto = prod != null ? prod.Nombre : $"Producto {d.IdProducto}",
                     Cantidad = d.Cantidad,
                     PrecioUnitario = precioUnitario,
-                    Subtotal = ToDecimal(d.Subtotal),
+                    Subtotal = subtotal,
                     ImagenProducto = dictImagenes.TryGetValue(d.IdProducto, out var img) ? img : null
                 };
             }).ToList();
@@ -85,7 +93,7 @@ namespace ClickMart.Servicios
                 PedidoId = pedido.PedidoId,
                 FechaEmision = DateTime.Now, // o pedido.Fecha
                 Usuario = nombreCliente,
-                Total = items.Sum(i => i.Subtotal),
+                Total = RoundMoney(items.Sum(i => i.Subtotal)),
                 Items = items
             };
 
@@ -94,6 +102,8 @@ namespace ClickMart.Servicios
 
         // === Helpers ===
         private static decimal ToDecimal(decimal? value) => value ?? 0m;
+        private static decimal RoundMoney(decimal value) =>
+            decimal.Round(value, 2, MidpointRounding.AwayFromZero);
 
         private byte[]? LoadLogo()
         {
@@ -110,9 +120,10 @@ namespace ClickMart.Servicios
         {
             var culture = new CultureInfo("es-ES");
             var logo = LoadLogo();
-            culture.NumberFormat.CurrencySymbol = "$";                // redundante aquí, pero explícito
-            culture.NumberFormat.CurrencyPositivePattern = 0;         // $n
-            culture.NumberFormat.CurrencyNegativePattern = 1;         // -$n
+            culture.NumberFormat.CurrencySymbol = "$";
+            culture.NumberFormat.CurrencyPositivePattern = 0; // $n
+            culture.NumberFormat.CurrencyNegativePattern = 1; // -$n
+
             byte[] pdf = Document.Create(doc =>
             {
                 doc.Page(page =>
@@ -120,7 +131,7 @@ namespace ClickMart.Servicios
                     page.Size(PageSizes.A4);
                     page.Margin(28);
 
-                    // ===== HEADER: Logo + Info de factura =====
+                    // ===== HEADER =====
                     page.Header().Row(row =>
                     {
                         row.ConstantItem(150).Height(60).AlignLeft().Column(col =>
@@ -144,11 +155,9 @@ namespace ClickMart.Servicios
                         col.Spacing(10);
 
                         col.Item().Text($"Cliente: {m.Usuario}").FontSize(12);
-
-                        // Separador con color de marca
                         col.Item().Border(0.5f).Background(Colors.Purple.Lighten4).Height(2);
 
-                        // Tabla con miniatura de producto
+                        // Tabla de items
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(c =>
@@ -160,7 +169,6 @@ namespace ClickMart.Servicios
                                 c.RelativeColumn(2);  // Subtotal
                             });
 
-                            // Encabezado
                             table.Header(h =>
                             {
                                 h.Cell().Element(HeaderCell).Text("Img");
@@ -170,10 +178,8 @@ namespace ClickMart.Servicios
                                 h.Cell().Element(HeaderCell).AlignRight().Text("Subtotal");
                             });
 
-                            // Filas
                             foreach (var it in m.Items)
                             {
-                                // Img (placeholder si no hay)
                                 table.Cell().Element(c =>
                                     BodyCell(c).MinHeight(48).MinWidth(48).Padding(2)
                                                .Border(0.5f).AlignCenter().AlignMiddle()
