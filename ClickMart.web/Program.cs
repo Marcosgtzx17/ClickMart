@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using ClickMart.web.Helpers; // para ClaimsHelper.IsJwtExpired
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,19 +36,45 @@ builder.Services.AddAuthentication("AuthCookie")
         opts.LoginPath = "/Auth/Login";
         opts.LogoutPath = "/Auth/Logout";
         opts.AccessDeniedPath = "/Auth/Denied";
-        opts.SlidingExpiration = true;
         opts.Cookie.Name = ".ClickMart.Auth";
         opts.Cookie.HttpOnly = true;
+
+        // Recomendado en flujos web:
         // opts.Cookie.SameSite = SameSiteMode.Lax;
-        // opts.Cookie.SecurePolicy = CookieSecurePolicy.Always; // si todo es HTTPS
+        // Si estás 100% en HTTPS:
+        // opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+
+        opts.SlidingExpiration = true;
+        opts.ExpireTimeSpan = TimeSpan.FromHours(8);
+
+        // Si el JWT (claim "token") expira, invalida el cookie automáticamente
+        opts.Events = new CookieAuthenticationEvents
+        {
+            OnValidatePrincipal = async context =>
+            {
+                try
+                {
+                    var token = context.Principal?.FindFirst("token")?.Value;
+                    if (ClaimsHelper.IsJwtExpired(token))
+                    {
+                        context.RejectPrincipal();
+                        await context.HttpContext.SignOutAsync("AuthCookie");
+                    }
+                }
+                catch
+                {
+                    // no-op: si algo falla, dejamos que el request siga
+                }
+            }
+        };
     });
 
 // ===== Autorización (políticas opcionales) =====
 builder.Services.AddAuthorization(options =>
 {
-    // Acepta “Admin”, “Administrador” y el typo “adminitrador”
+    // Acepta alias clásicos, sin typos
     options.AddPolicy("AdminOnly",
-        policy => policy.RequireRole("Admin", "Administrador", "adminitrador"));
+        policy => policy.RequireRole("Admin", "Administrador", "Administrator"));
 });
 
 // ===== Servicios (DI) =====

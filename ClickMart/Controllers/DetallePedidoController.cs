@@ -3,12 +3,13 @@ using ClickMart.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using ClickMart.Utils;
 
 namespace ClickMart.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Cliente,Admin")]
+    [Authorize(Roles = "Cliente,Admin,Administrador,Administrator")]
     public class DetallePedidoController : ControllerBase
     {
         private readonly IDetallePedidoService _svc;
@@ -20,43 +21,33 @@ namespace ClickMart.Api.Controllers
             _pedidoSvc = pedidoSvc;
         }
 
-        // === Helpers locales (evitamos dependencia externa) ===
-        private int? GetUserId()
-        {
-            var raw = User.FindFirst("uid")?.Value
-                     ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? User.Identity?.Name;
-            return int.TryParse(raw, out var id) ? id : null;
-        }
-
-        private bool IsAdmin() => User.IsInRole("Admin");
-
         // GET /api/DetallePedido  -> SOLO ADMIN
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Administrador,Administrator")]
         [ProducesResponseType(typeof(List<DetallePedidoResponseDTO>), StatusCodes.Status200OK)]
         public async Task<ActionResult<List<DetallePedidoResponseDTO>>> GetAll()
             => Ok(await _svc.GetAllAsync());
 
-        // GET /api/DetallePedido/pedido/6  -> dueño del pedido o Admin
+        // GET /api/DetallePedido/pedido/{pedidoId}  -> dueño o Admin
         [HttpGet("pedido/{pedidoId:int}")]
         [ProducesResponseType(typeof(List<DetallePedidoResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<List<DetallePedidoResponseDTO>>> GetByPedido(int pedidoId)
         {
-            if (!IsAdmin())
+            if (!User.IsAdmin())
             {
                 var pedido = await _pedidoSvc.GetByIdAsync(pedidoId);
                 if (pedido is null) return NotFound();
-                var uid = GetUserId();
+
+                var uid = User.GetUserId();
                 if (uid is null || pedido.UsuarioId != uid.Value) return Forbid();
             }
 
             return Ok(await _svc.GetByPedidoAsync(pedidoId));
         }
 
-        // GET /api/DetallePedido/12  -> dueño del pedido o Admin
+        // GET /api/DetallePedido/{id}  -> dueño o Admin
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(DetallePedidoResponseDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -66,29 +57,31 @@ namespace ClickMart.Api.Controllers
             var dto = await _svc.GetByIdAsync(id);
             if (dto is null) return NotFound();
 
-            if (!IsAdmin())
+            if (!User.IsAdmin())
             {
                 var pedido = await _pedidoSvc.GetByIdAsync(dto.IdPedido);
                 if (pedido is null) return NotFound();
-                var uid = GetUserId();
+
+                var uid = User.GetUserId();
                 if (uid is null || pedido.UsuarioId != uid.Value) return Forbid();
             }
 
             return Ok(dto);
         }
 
-        // POST /api/DetallePedido  -> dueño del pedido o Admin
+        // POST /api/DetallePedido  -> dueño o Admin
         [HttpPost]
         [ProducesResponseType(typeof(DetallePedidoResponseDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<DetallePedidoResponseDTO>> Create([FromBody] DetallePedidoCreateDTO dto)
         {
-            if (!IsAdmin())
+            if (!User.IsAdmin())
             {
                 var pedido = await _pedidoSvc.GetByIdAsync(dto.IdPedido);
                 if (pedido is null) return NotFound();
-                var uid = GetUserId();
+
+                var uid = User.GetUserId();
                 if (uid is null || pedido.UsuarioId != uid.Value) return Forbid();
             }
 
@@ -96,22 +89,22 @@ namespace ClickMart.Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.DetalleId }, created);
         }
 
-        // PUT /api/DetallePedido/12  -> dueño del pedido o Admin
+        // PUT /api/DetallePedido/{id}  -> dueño o Admin
         [HttpPut("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Update(int id, [FromBody] DetallePedidoUpdateDTO dto)
         {
-            // Primero determinamos a qué pedido pertenece el detalle
             var det = await _svc.GetByIdAsync(id);
             if (det is null) return NotFound();
 
-            if (!IsAdmin())
+            if (!User.IsAdmin())
             {
                 var pedido = await _pedidoSvc.GetByIdAsync(det.IdPedido);
                 if (pedido is null) return NotFound();
-                var uid = GetUserId();
+
+                var uid = User.GetUserId();
                 if (uid is null || pedido.UsuarioId != uid.Value) return Forbid();
             }
 
@@ -119,7 +112,7 @@ namespace ClickMart.Api.Controllers
             return ok ? NoContent() : NotFound();
         }
 
-        // DELETE /api/DetallePedido/12  -> dueño del pedido o Admin
+        // DELETE /api/DetallePedido/{id}  -> dueño o Admin
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -129,11 +122,12 @@ namespace ClickMart.Api.Controllers
             var det = await _svc.GetByIdAsync(id);
             if (det is null) return NotFound();
 
-            if (!IsAdmin())
+            if (!User.IsAdmin())
             {
                 var pedido = await _pedidoSvc.GetByIdAsync(det.IdPedido);
                 if (pedido is null) return NotFound();
-                var uid = GetUserId();
+
+                var uid = User.GetUserId();
                 if (uid is null || pedido.UsuarioId != uid.Value) return Forbid();
             }
 
@@ -141,18 +135,19 @@ namespace ClickMart.Api.Controllers
             return ok ? NoContent() : NotFound();
         }
 
-        // POST /api/DetallePedido/pedido/6/recalcular  -> dueño del pedido o Admin
+        // POST /api/DetallePedido/pedido/{pedidoId}/recalcular  -> dueño o Admin
         [HttpPost("pedido/{pedidoId:int}/recalcular")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> RecalcularTotalPedido(int pedidoId)
         {
-            if (!IsAdmin())
+            if (!User.IsAdmin())
             {
                 var pedido = await _pedidoSvc.GetByIdAsync(pedidoId);
                 if (pedido is null) return NotFound();
-                var uid = GetUserId();
+
+                var uid = User.GetUserId();
                 if (uid is null || pedido.UsuarioId != uid.Value) return Forbid();
             }
 

@@ -43,12 +43,25 @@ namespace ClickMart.web.Controllers
 
         private static bool EsAdmin(ClaimsPrincipal u)
         {
-            var roles = u.FindAll(ClaimTypes.Role)
-                         .Select(c => c.Value?.Trim().ToLowerInvariant())
-                         .Where(v => !string.IsNullOrWhiteSpace(v));
+            var roleTypes = new[] { ClaimTypes.Role, "role", "roles", "rol" };
+            var roles = u.Claims
+                .Where(c => roleTypes.Contains(c.Type))
+                .SelectMany(c => (c.Value ?? "")
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries))
+                .Select(v => v.Trim().ToLowerInvariant());
 
             // acepta "admin", "administrador", "administrator"
             return roles.Any(r => r == "admin" || r == "administrador" || r == "administrator");
+        }
+
+        private int? GetMyUserId()
+        {
+            var raw = User.FindFirst("uid")?.Value
+                    ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? User.FindFirst("sub")?.Value
+                    ?? User.Identity?.Name;
+
+            return int.TryParse(raw, out var id) ? id : null;
         }
 
         // ========== LISTADO ==========
@@ -87,28 +100,82 @@ namespace ClickMart.web.Controllers
             var token = ClaimsHelper.GetToken(User);
             if (string.IsNullOrWhiteSpace(token)) return RedirectToAction("Login", "Auth");
 
+            PedidoResponseDTO p;
             try
             {
-                var p = await _svc.GetByIdAsync(id, token);
+                p = await _svc.GetByIdAsync(id, token);
                 if (p is null) return NotFound();
-
-                var detalles = await _detSvc.GetByPedidoAsync(id, token) ?? new List<DetallePedidoResponseDTO>();
-                ViewBag.Detalles = detalles;
-                ViewBag.NewDetalle = new DetallePedidoCreateDTO { IdPedido = id, Cantidad = 1 };
-                ViewBag.Productos = await _prodSvc.GetAllAsync(token) ?? new List<ProductoLiteDTO>();
-
-                return View(p);
-            }
-            catch (ApiHttpException ex) when (ex.StatusCode == HttpStatusCode.Forbidden)
-            {
-                TempData["Error"] = "No tienes permisos para ver ese pedido.";
-                return RedirectToAction(nameof(Index));
             }
             catch (ApiHttpException ex)
             {
-                TempData["Error"] = ex.Message;
+                TempData["Error"] = $"No se pudo obtener el pedido (API {(int)ex.StatusCode}): {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
+
+            // ¿es dueño?
+            var myId = GetMyUserId() ?? 0;
+            var esDueno = myId == p.UsuarioId;
+
+            // *** Regla pedida: solo gestiona si es dueño y el pago está PENDIENTE ***
+            var puedeGestionar = esDueno && p.PagoEstado == EstadoPagoDTO.PENDIENTE;
+            ViewBag.PuedeGestionar = puedeGestionar; // admin NO gestiona
+
+            // Obtener detalles con manejo de 403
+            List<DetallePedidoResponseDTO> detalles;
+            try
+            {
+                detalles = await _detSvc.GetByPedidoAsync(id, token) ?? new List<DetallePedidoResponseDTO>();
+            }
+            catch (ApiHttpException ex) when (ex.StatusCode == HttpStatusCode.Forbidden)
+            {
+                // Si eres admin y la API vieja no permite, muestra vacío en vez de romper.
+                if (User.IsInRole("Admin") || User.IsInRole("Administrador") || User.IsInRole("administrator"))
+                {
+                    detalles = new List<DetallePedidoResponseDTO>();
+                    TempData["Warn"] = "No se pudieron cargar los detalles por permisos del endpoint. (Actualiza la API para permitir Admin)";
+                }
+                else
+                {
+                    TempData["Error"] = "No tienes permisos para ver ese pedido.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            ViewBag.Detalles = detalles;
+
+            // estos no son críticos; si fallan, no bloquean la vista
+            try
+            {
+                var productos = await _prodSvc.GetAllAsync(token) ?? new List<ProductoLiteDTO>();
+                ViewBag.Productos = productos;
+            }
+            catch { ViewBag.Productos = new List<ProductoLiteDTO>(); }
+
+            ViewBag.NewDetalle = new DetallePedidoCreateDTO { IdPedido = id, Cantidad = 1 };
+
+            return View(p);
+        }
+
+        // Helper: ¿el usuario autenticado puede gestionar (dueño + PENDIENTE)?
+        private async Task<bool> PuedeGestionarPedidoAsync(int pedidoId, string token)
+        {
+            var p = await _svc.GetByIdAsync(pedidoId, token);
+            if (p is null) return false;
+
+            var myId = GetMyUserId();
+            return myId.HasValue
+                && myId.Value == p.UsuarioId
+                && p.PagoEstado == EstadoPagoDTO.PENDIENTE;
+        }
+
+        // (Se deja el antiguo por compatibilidad; ya no lo usamos en mutaciones)
+        private async Task<bool> EsDuenoDelPedidoAsync(int pedidoId, string token)
+        {
+            var p = await _svc.GetByIdAsync(pedidoId, token);
+            if (p is null) return false;
+
+            var myId = GetMyUserId();
+            return myId.HasValue && myId.Value == p.UsuarioId;
         }
 
         // ========== CREATE ==========
@@ -230,11 +297,17 @@ namespace ClickMart.web.Controllers
             }
         }
 
-        // ========== EDIT ==========
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
+
+            // Ahora requiere dueño + PENDIENTE
+            if (!await PuedeGestionarPedidoAsync(id, token!))
+            {
+                TempData["Error"] = "No puedes editar este pedido (no eres dueño o no está PENDIENTE).";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             var p = await _svc.GetByIdAsync(id, token!);
             if (p is null) return NotFound();
@@ -253,8 +326,15 @@ namespace ClickMart.web.Controllers
         public async Task<IActionResult> Edit(int id, PedidoUpdateDTO dto)
         {
             if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
-
             if (id != dto.PedidoId) return BadRequest();
+
+            // Requiere dueño + PENDIENTE
+            if (!await PuedeGestionarPedidoAsync(id, token!))
+            {
+                TempData["Error"] = "No puedes editar este pedido (no eres dueño o no está PENDIENTE).";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             if (!ModelState.IsValid) return View(dto);
 
             var ok = await _svc.UpdateAsync(dto, token!);
@@ -268,6 +348,13 @@ namespace ClickMart.web.Controllers
         {
             if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
 
+            // Requiere dueño + PENDIENTE
+            if (!await PuedeGestionarPedidoAsync(id, token!))
+            {
+                TempData["Error"] = "No puedes eliminar este pedido (no eres dueño o no está PENDIENTE).";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             var p = await _svc.GetByIdAsync(id, token!);
             return p is null ? NotFound() : View(p);
         }
@@ -277,24 +364,35 @@ namespace ClickMart.web.Controllers
         {
             if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
 
+            // Requiere dueño + PENDIENTE
+            if (!await PuedeGestionarPedidoAsync(id, token!))
+            {
+                TempData["Error"] = "No puedes eliminar este pedido (no eres dueño o no está PENDIENTE).";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             var ok = await _svc.DeleteAsync(id, token!);
             TempData[ok ? "Success" : "Error"] = ok ? "Pedido eliminado." : "No se pudo eliminar.";
             return RedirectToAction(nameof(Index));
         }
 
-        // ========== ACCIONES AUXILIARES ==========
         [HttpPost]
         public async Task<IActionResult> RecalcularTotal(int id)
         {
             if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
 
+            // Requiere dueño + PENDIENTE
+            if (!await PuedeGestionarPedidoAsync(id, token!))
+            {
+                TempData["Error"] = "No puedes modificar este pedido (no eres dueño o no está PENDIENTE).";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             try
             {
                 var result = await _svc.RecalcularTotalAsync(id, token!);
-                if (result is null)
-                    TempData["Error"] = "No se pudo recalcualar el total.";
-                else
-                    TempData["Success"] = $"Total recalculado: {result.Total:C}";
+                TempData[result is null ? "Error" : "Success"] =
+                    result is null ? "No se pudo recalcualar el total." : $"Total recalculado: {result.Total:C}";
             }
             catch (ApiHttpException ex)
             {
@@ -306,27 +404,24 @@ namespace ClickMart.web.Controllers
         [HttpPost]
         public async Task<IActionResult> GenerarCodigo(int id)
         {
-            var token = ClaimsHelper.GetToken(User);
-            if (string.IsNullOrWhiteSpace(token))
-                return RedirectToAction("Login", "Auth"); // sesión expirada
+            if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
 
-            // <- solo diagnóstico (no obligatorio)
-            var email = ClickMart.Utils.ApiClaimsHelper.GetEmail(User);
-            if (string.IsNullOrWhiteSpace(email))
-                TempData["Warn"] = "No se encontró un email en tus claims (GetEmail).";
+            // Requiere dueño + PENDIENTE
+            if (!await PuedeGestionarPedidoAsync(id, token!))
+            {
+                TempData["Error"] = "No puedes generar código para este pedido (no eres dueño o no está PENDIENTE).";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             try
             {
-                var dto = await _svc.GenerarCodigoAsync(id, token);
+                var dto = await _svc.GenerarCodigoAsync(id, token!);
                 TempData["Success"] = dto is null
                     ? "No se pudo generar el código."
                     : $"Código generado y enviado: {dto.Codigo}";
             }
             catch (ApiHttpException ex)
             {
-                if (ex.StatusCode == HttpStatusCode.Unauthorized)
-                    return RedirectToAction("Login", "Auth"); // idéntico a la vez anterior
-
                 TempData["Error"] = ex.Message;
             }
             return RedirectToAction(nameof(Details), new { id });
@@ -335,22 +430,28 @@ namespace ClickMart.web.Controllers
         [HttpPost]
         public async Task<IActionResult> Confirmar(int id, CodigoValidarDTO dto)
         {
-            var token = ClaimsHelper.GetToken(User);
+            if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
+
+            // Requiere dueño + PENDIENTE (confirmar sólo tiene sentido si está pendiente)
+            if (!await PuedeGestionarPedidoAsync(id, token!))
+            {
+                TempData["Error"] = "No puedes confirmar pagos de este pedido (no eres dueño o no está PENDIENTE).";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             if (string.IsNullOrWhiteSpace(dto.Codigo))
             {
                 TempData["Error"] = "Debe ingresar el código.";
                 return RedirectToAction(nameof(Details), new { id });
             }
+
             try
             {
-                var ok = await _svc.ConfirmarPagoAsync(id, dto.Codigo, token);
+                var ok = await _svc.ConfirmarPagoAsync(id, dto.Codigo, token!);
                 TempData[ok ? "Success" : "Error"] = ok ? "Pago confirmado." : "No se pudo confirmar.";
             }
             catch (ApiHttpException ex)
             {
-                if (ex.StatusCode == HttpStatusCode.Unauthorized)
-                    return RedirectToAction("Login", "Auth"); // mismo manejo
-
                 TempData["Error"] = ex.Message;
             }
             return RedirectToAction(nameof(Details), new { id });
@@ -361,17 +462,15 @@ namespace ClickMart.web.Controllers
         {
             if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
 
-            if (dto.IdPedido <= 0)
+            // Requiere dueño + PENDIENTE
+            if (!await PuedeGestionarPedidoAsync(dto.IdPedido, token!))
             {
-                TempData["Error"] = "Pedido inválido.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            if (dto.Cantidad <= 0)
-            {
-                TempData["Error"] = "Cantidad debe ser mayor a 0.";
+                TempData["Error"] = "No puedes modificar este pedido (no eres dueño o no está PENDIENTE).";
                 return RedirectToAction(nameof(Details), new { id = dto.IdPedido });
             }
+
+            if (dto.IdPedido <= 0) { TempData["Error"] = "Pedido inválido."; return RedirectToAction(nameof(Index)); }
+            if (dto.Cantidad <= 0) { TempData["Error"] = "Cantidad debe ser mayor a 0."; return RedirectToAction(nameof(Details), new { id = dto.IdPedido }); }
 
             try
             {
@@ -385,16 +484,8 @@ namespace ClickMart.web.Controllers
                 return RedirectToAction(nameof(Details), new { id = dto.IdPedido });
             }
 
-            try
-            {
-                var result = await _svc.RecalcularTotalAsync(dto.IdPedido, token!);
-                if (result is null)
-                    TempData["Warn"] = "Detalle agregado, pero no se pudo recalcular el total ahora.";
-            }
-            catch (ApiHttpException)
-            {
-                TempData["Warn"] = "Detalle agregado, pero no se pudo recalcular el total ahora.";
-            }
+            try { await _svc.RecalcularTotalAsync(dto.IdPedido, token!); }
+            catch { TempData["Warn"] = "Detalle agregado, pero no se pudo recalcular el total ahora."; }
 
             return RedirectToAction(nameof(Details), new { id = dto.IdPedido });
         }
@@ -403,6 +494,13 @@ namespace ClickMart.web.Controllers
         public async Task<IActionResult> UpdateDetalle(DetallePedidoUpdateDTO dto, int pedidoId)
         {
             if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
+
+            // Requiere dueño + PENDIENTE
+            if (!await PuedeGestionarPedidoAsync(pedidoId, token!))
+            {
+                TempData["Error"] = "No puedes modificar este pedido (no eres dueño o no está PENDIENTE).";
+                return RedirectToAction(nameof(Details), new { id = pedidoId });
+            }
 
             if (dto.DetalleId <= 0 || dto.Cantidad <= 0)
             {
@@ -427,6 +525,13 @@ namespace ClickMart.web.Controllers
         public async Task<IActionResult> DeleteDetalle(int id, int pedidoId)
         {
             if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
+
+            // Requiere dueño + PENDIENTE
+            if (!await PuedeGestionarPedidoAsync(pedidoId, token!))
+            {
+                TempData["Error"] = "No puedes modificar este pedido (no eres dueño o no está PENDIENTE).";
+                return RedirectToAction(nameof(Details), new { id = pedidoId });
+            }
 
             try
             {
