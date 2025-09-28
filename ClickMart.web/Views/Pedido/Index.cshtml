@@ -32,7 +32,7 @@ else
                 <th>Fecha</th>
                 <th>Método</th>
                 <th>Pago</th>
-                <th></th>
+                <th class="text-end" style="width: 360px;">Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -47,6 +47,15 @@ else
                     <td>@p.PagoEstado</td>
                     <td class="text-end">
                         <a asp-action="Details" asp-route-id="@p.PedidoId" class="btn btn-sm btn-info">Ver</a>
+
+                        <!-- NUEVO: Botón Factura en el listado -->
+                        <a asp-action="Factura"
+                           asp-route-id="@p.PedidoId"
+                           class="btn btn-sm btn-outline-danger"
+                           target="_blank" rel="noopener">
+                            Factura
+                        </a>
+
                         <a asp-action="Edit" asp-route-id="@p.PedidoId" class="btn btn-sm btn-warning">Editar</a>
                         <a asp-action="Delete" asp-route-id="@p.PedidoId" class="btn btn-sm btn-danger">Borrar</a>
                     </td>
@@ -55,4 +64,3 @@ else
         </tbody>
     </table>
 }
-

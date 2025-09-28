@@ -24,6 +24,8 @@ builder.Services.AddHttpClient("Api", c =>
     c.DefaultRequestHeaders.Accept.Add(
         new MediaTypeWithQualityHeaderValue("application/json"));
 });
+// Nota: AddHttpClient registra IHttpClientFactory automáticamente.
+// Nuestro PedidoService llamará CreateClient("Api") para traer el PDF.
 
 // ===== Auth por Cookie (el MVC protege vistas con cookie) =====
 builder.Services.AddAuthentication("AuthCookie")
@@ -31,7 +33,7 @@ builder.Services.AddAuthentication("AuthCookie")
     {
         opts.LoginPath = "/Auth/Login";
         opts.LogoutPath = "/Auth/Logout";
-        opts.AccessDeniedPath = "/Auth/Denied"; // asegúrate que exista
+        opts.AccessDeniedPath = "/Auth/Denied";
         opts.SlidingExpiration = true;
         opts.Cookie.Name = ".ClickMart.Auth";
         opts.Cookie.HttpOnly = true;
@@ -51,19 +53,16 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<ClickMart.web.Services.ApiService>();
 builder.Services.AddScoped<ClickMart.web.Services.AuthService>();
 builder.Services.AddScoped<ClickMart.web.Services.ProductoService>();
-builder.Services.AddScoped<ClickMart.web.Services.DistribuidorService>(); // ?? FALTABA
+builder.Services.AddScoped<ClickMart.web.Services.DistribuidorService>();
 builder.Services.AddScoped<ClickMart.web.Services.CategoriaService>();
 builder.Services.AddScoped<ClickMart.web.Services.CatalogoService>();
 builder.Services.AddScoped<ClickMart.web.Services.UsuarioService>();
 builder.Services.AddScoped<ClickMart.web.Services.RolService>();
 builder.Services.AddScoped<ClickMart.web.Services.ResenaService>();
-builder.Services.AddScoped<ClickMart.web.Services.PedidoService>();
+builder.Services.AddScoped<ClickMart.web.Services.PedidoService>();           // ? PedidoService ahora recibe ApiService + IHttpClientFactory
 builder.Services.AddScoped<ClickMart.web.Services.DetallePedidoService>();
 builder.Services.AddScoped<ClickMart.web.Services.UsuarioApiService>();
 builder.Services.AddScoped<ClickMart.web.Services.ProductoCatalogService>();
-
-
-
 
 var app = builder.Build();
 

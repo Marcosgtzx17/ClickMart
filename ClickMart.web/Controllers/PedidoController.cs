@@ -51,8 +51,6 @@ namespace ClickMart.web.Controllers
             return roles.Any(r => r == "admin" || r == "administrador" || r == "administrator");
         }
 
-
-
         // ========== LISTADO ==========
         [HttpGet]
         public async Task<IActionResult> Index()
@@ -69,13 +67,10 @@ namespace ClickMart.web.Controllers
                     ? (await _svc.GetAllAsync(token) ?? new List<PedidoResponseDTO>())
                     : (await _svc.GetMineAsync(token) ?? new List<PedidoResponseDTO>());
 
-                //TempData["Warn"] = $"Modo {(esAdmin ? "ADMIN (GetAllAsync)" : "CLIENTE (GetMineAsync)")}. Roles: {string.Join(",", User.FindAll(ClaimTypes.Role).Select(r => r.Value))}";
-
                 return View(data);
             }
             catch (ApiHttpException ex)
             {
-                // Si tu token no tiene permiso para GetAll, verás 401/403 aquí.
                 TempData["Error"] = $"No se pudieron cargar los pedidos: {ex.Message}";
                 return View(new List<PedidoResponseDTO>());
             }
@@ -85,8 +80,6 @@ namespace ClickMart.web.Controllers
                 return View(new List<PedidoResponseDTO>());
             }
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> Details(int id)
@@ -117,7 +110,6 @@ namespace ClickMart.web.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-
 
         // ========== CREATE ==========
         [HttpGet]
@@ -310,6 +302,7 @@ namespace ClickMart.web.Controllers
             }
             return RedirectToAction(nameof(Details), new { id });
         }
+
         [HttpPost]
         public async Task<IActionResult> GenerarCodigo(int id)
         {
@@ -339,8 +332,6 @@ namespace ClickMart.web.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
-
-
         [HttpPost]
         public async Task<IActionResult> Confirmar(int id, CodigoValidarDTO dto)
         {
@@ -364,7 +355,6 @@ namespace ClickMart.web.Controllers
             }
             return RedirectToAction(nameof(Details), new { id });
         }
-
 
         [HttpPost]
         public async Task<IActionResult> AddDetalle(DetallePedidoCreateDTO dto)
@@ -449,6 +439,37 @@ namespace ClickMart.web.Controllers
                 TempData["Error"] = ex.Message;
             }
             return RedirectToAction(nameof(Details), new { id = pedidoId });
+        }
+
+        // =================== NUEVO: Ver Factura (PDF) ===================
+        [HttpGet]
+        public async Task<IActionResult> Factura(int id)
+        {
+            if (TokenInvalido(out var token)) return RedirectToAction("Login", "Auth");
+
+            try
+            {
+                var pdfBytes = await _svc.GetFacturaPdfAsync(id, token!);
+                if (pdfBytes is null || pdfBytes.Length == 0)
+                {
+                    TempData["Error"] = "No se encontró la factura.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+
+                Response.Headers["Content-Disposition"] = $"inline; filename=Factura_{id}.pdf";
+                Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+                return File(pdfBytes, "application/pdf");
+            }
+            catch (ApiHttpException ex) when (ex.StatusCode == HttpStatusCode.Forbidden)
+            {
+                TempData["Error"] = "No tienes permisos para ver ese PDF.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            catch (ApiHttpException ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Details), new { id });
+            }
         }
     }
 }
