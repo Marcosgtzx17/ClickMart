@@ -1,82 +1,102 @@
 ﻿@model List<ClickMart.web.DTOs.ProductoDTOs.ProductoResponseDTO>
+@inject Microsoft.Extensions.Configuration.IConfiguration Config
 @{
     ViewData["Title"] = "Productos";
     var ratings = ViewBag.Ratings as Dictionary<int, double> ?? new();
+    var apiBase = (Config["ApiBaseUrl"] ?? "").TrimEnd('/'); // ej: https://localhost:7069/api
+
+    Func<int, string> GetImgSrc = (int id) =>
+    {
+        // Si tienes un endpoint en tu API para la imagen:
+        return $"{apiBase}/producto/{id}/imagen";
+
+        // Alternativa si servirás desde wwwroot/uploads (descomenta):
+        // return Url.Content($"~/uploads/productos/{id}.jpg");
+    };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">@ViewData["Title"]</h2>
-    <a asp-action="Create" class="btn btn-primary">Nuevo producto</a>
-</div>
+<div class="theme theme-royal">
+    <!-- Cambia a theme-ocean/forest si quieres -->
+    <!-- HERO -->
+    <section class="store-hero mb-4">
+        <div>
+            <h1 class="store-title">Productos</h1>
+            <p class="store-subtitle">Catálogo de productos ClickMart</p>
+        </div>
+        <div class="hero-actions">
+            <a asp-action="Create" class="btn btn-primary btn-lg">Nuevo producto</a>
+        </div>
+    </section>
 
-@if (TempData["Ok"] != null)
-{
-    <div class="alert alert-success">@TempData["Ok"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
-@if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
-{
-    <div class="alert alert-danger">@ViewBag.Error</div>
-}
+    @if (TempData["Ok"] != null)
+    {
+        <div class="alert alert-success shadow-sm">@TempData["Ok"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger shadow-sm">@TempData["Error"]</div>
+    }
 
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th style="width:60px">#</th>
-                    <th>Nombre</th>
-                    <th style="width:140px">Precio</th>
-                    <th style="width:220px">Calificación</th>
-                    <th class="text-end" style="width:240px"></th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model?.Any() == true)
-                {
-                    var i = 1;
-                    foreach (var p in Model)
-                    {
-                        var avg = ratings.ContainsKey(p.ProductoId) ? ratings[p.ProductoId] : 0.0;
-                        var rounded = (int)Math.Round(avg, MidpointRounding.AwayFromZero);
-                        <tr>
-                            <td>@i</td>
-                            <td>@p.Nombre</td>
-                            <td>@p.Precio.ToString("C")</td>
-                            <td>
-                                <span class="stars-view" aria-label="@($"{avg:0.0} de 5")">
-                                    @for (var s = 1; s <= 5; s++)
-                                    {
-                                        <span class="star @(s <= rounded ? "active" : "")">★</span>
-                                    }
-                                </span>
-                                <span class="ms-1 text-muted">@avg.ToString("0.0")</span>
-                            </td>
-                            <td class="text-end">
-                                <a asp-action="Details" asp-route-id="@p.ProductoId" class="btn btn-sm btn-outline-info">Ver</a>
-                                <a asp-action="Edit" asp-route-id="@p.ProductoId" class="btn btn-sm btn-outline-secondary">Editar</a>
-                                <a asp-controller="Resena"
-                                   asp-action="Create"
-                                   asp-route-productoId="@p.ProductoId"
-                                   class="btn btn-sm btn-outline-primary">
-                                    Reseñar
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@p.ProductoId" class="btn btn-sm btn-outline-danger">Eliminar</a>
-                            </td>
-                        </tr>
-                        i++;
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="5" class="text-center py-4">No hay productos</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+    <!-- GRID DE TARJETAS -->
+    <section class="cards-grid">
+        @if (Model?.Any() == true)
+        {
+            var i = 1;
+            foreach (var p in Model)
+            {
+                var avg = ratings.ContainsKey(p.ProductoId) ? ratings[p.ProductoId] : 0.0;
+                var rounded = (int)Math.Round(avg, MidpointRounding.AwayFromZero);
+
+                <article class="p-card @(p.TieneImagen ? "has-img" : "")">
+                    <span class="idx-chip">#@i</span>
+
+                    <!-- Tapa gris + bloque principal (sin imagen o con imagen si existe) -->
+                    <div class="p-card-hero">
+                        @if (p.TieneImagen)
+                        {
+                            <img src="@GetImgSrc(p.ProductoId)" alt="Imagen de @p.Nombre" loading="lazy" />
+                        }
+                        else
+                        {
+                            @* sin imagen: queda limpio como en tu screenshot *@
+                        }
+                    </div>
+
+                    <!-- Franja turquesa -->
+                    <div class="p-divider"></div>
+
+                    <!-- Nombre y precio (chip) -->
+                    <div class="p-name-price">
+                        <a class="p-link" asp-action="Details" asp-route-id="@p.ProductoId">@p.Nombre</a>
+                        <span class="price-chip">@p.Precio.ToString("C")</span>
+                    </div>
+
+                    <!-- Rating -->
+                    <div class="p-rating">
+                        <span class="stars-view" aria-label="@($"{avg:0.0} de 5")">
+                            @for (var s = 1; s <= 5; s++)
+                            {
+                                <span class="star @(s <= rounded ? "active" : "")">★</span>
+                            }
+                        </span>
+                        <span class="rating-text">@avg.ToString("0.0") / 5</span>
+                    </div>
+
+                    <!-- Acciones (2x2) -->
+                    <div class="p-actions">
+                        <a asp-action="Details" asp-route-id="@p.ProductoId" class="btn btn-soft">Ver</a>
+                        <a asp-action="Edit" asp-route-id="@p.ProductoId" class="btn btn-soft">Editar</a>
+                        <a asp-controller="Resena" asp-action="Create" asp-route-productoId="@p.ProductoId" class="btn btn-soft btn-soft-primary">Reseñar</a>
+                        <a asp-action="Delete" asp-route-id="@p.ProductoId" class="btn btn-soft btn-soft-danger">Eliminar</a>
+                    </div>
+                </article>
+
+                i++;
+            }
+        }
+        else
+        {
+            <div class="empty-state"><p>No hay productos</p></div>
+        }
+    </section>
 </div>

@@ -2,57 +2,76 @@
 @{
     ViewData["Title"] = "Usuarios";
 }
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">@ViewData["Title"]</h2>
-    <a asp-action="Create" class="btn btn-primary">Nuevo usuario</a>
+
+<!-- HERO -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Usuarios</h1>
+        <p class="store-subtitle mb-0">Administración de cuentas ClickMart</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary btn-lg">Nuevo usuario</a>
 </div>
 
 @if (TempData["Ok"] != null)
 {
-    <div class="alert alert-success">@TempData["Ok"]</div>
+     <div class="alert alert-success shadow-sm">@TempData["Ok"]</div>
 }
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger">@TempData["Error"]</div>
+     <div class="alert alert-danger  shadow-sm">@TempData["Error"]</div>
 }
 @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
 {
-    <div class="alert alert-danger">@ViewBag.Error</div>
+     <div class="alert alert-danger shadow-sm">@ViewBag.Error</div>
 }
 
-<div class="card shadow-sm">
+<div class="card shadow-sm border-0 rounded-4">
     <div class="card-body p-0">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="table table-modern table-hover mb-0 align-middle">
             <thead class="table-light">
                 <tr>
-                    <th>#</th>
+                    <th style="width:84px">#</th>
                     <th>Nombre</th>
                     <th>Email</th>
-                    <th>Teléfono</th>
+                    <th style="width:140px">Teléfono</th>
+                    <th style="width:120px">Rol</th>     @* Rol más a la izquierda y compacto *@
                     <th>Dirección</th>
-                    <th>Rol</th>
-                    <th class="text-end">Acciones</th>
+                    <th class="text-end" style="width:220px">Acciones</th> @* Columna más angosta *@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var u in Model)
+                @foreach (var u in Model ?? Enumerable.Empty<ClickMart.web.DTOs.UsuarioDTOs.UsuarioListadoDTO>())
                 {
-                    var isAdmin = !string.IsNullOrWhiteSpace(u.Rol) &&
-                    (u.Rol.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
-                    u.Rol.Equals("Administrador", StringComparison.OrdinalIgnoreCase));
-                    var badgeClass = isAdmin ? "badge bg-warning text-dark" : "badge bg-secondary text-dark";
+                    var id = u.UsuarioId;
+                    var rol = (u.Rol ?? "").Trim();
+                    var low = rol.ToLowerInvariant();
 
-                    <tr>
-                        <td>@u.UsuarioId</td>
-                        <td>@u.Nombre</td>
+                    var roleClass =
+                    low.Contains("admin") ? "role-badge admin" :
+                    (low.Contains("vendedor") || low.Contains("seller") ||
+                    low.Contains("moderador")) ? "role-badge staff" :
+                    "role-badge user";
+
+                    <tr class="row-hover">
+                        <td><span class="badge rounded-pill bg-info-subtle text-info-emphasis border">#@id</span></td>
+                        <td class="fw-semibold">@u.Nombre</td>
                         <td>@u.Email</td>
                         <td>@(string.IsNullOrWhiteSpace(u.Telefono) ? "—" : u.Telefono)</td>
+                        <td><span class="@roleClass">@((string.IsNullOrWhiteSpace(rol)) ? "—" : rol)</span></td>
                         <td>@(string.IsNullOrWhiteSpace(u.Direccion) ? "—" : u.Direccion)</td>
-                        <td><span class="@badgeClass">@(!string.IsNullOrWhiteSpace(u.Rol) ? u.Rol : "—")</span></td>
+
                         <td class="text-end">
-                            <a asp-action="Details" asp-route-id="@u.UsuarioId" class="btn btn-sm btn-outline-secondary">Ver</a>
-                            <a asp-action="Edit" asp-route-id="@u.UsuarioId" class="btn btn-sm btn-warning">Editar</a>
-                            <a asp-action="Delete" asp-route-id="@u.UsuarioId" class="btn btn-sm btn-danger">Eliminar</a>
+                            <!-- Podio: 1 arriba (Ver), 2 abajo (Editar/Eliminar) -->
+                            <div class="actions-podium">
+                                <a asp-action="Details" asp-route-id="@u.UsuarioId"
+                                   class="btn btn-sm btn-outline-info podium-top">Ver</a>
+
+                                <a asp-action="Edit" asp-route-id="@u.UsuarioId"
+                                   class="btn btn-sm btn-outline-secondary">Editar</a>
+
+                                <a asp-action="Delete" asp-route-id="@u.UsuarioId"
+                                   class="btn btn-sm btn-outline-danger">Eliminar</a>
+                            </div>
                         </td>
                     </tr>
                 }

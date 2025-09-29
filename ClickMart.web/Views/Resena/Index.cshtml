@@ -4,35 +4,39 @@
     var users = ViewBag.UserNames as Dictionary<int, string> ?? new();
     var prods = ViewBag.ProductNames as Dictionary<int, string> ?? new();
 }
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">@ViewData["Title"]</h2>
-    <a asp-action="Create" class="btn btn-primary">Nueva reseña</a>
+
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Reseñas</h1>
+        <p class="store-subtitle mb-0">Opiniones de clientes sobre productos</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary btn-lg">Nueva reseña</a>
 </div>
 
 @if (TempData["Ok"] != null)
 {
-    <div class="alert alert-success">@TempData["Ok"]</div>
+    <div class="alert alert-success shadow-sm">@TempData["Ok"]</div>
 }
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger">@TempData["Error"]</div>
+    <div class="alert alert-danger shadow-sm">@TempData["Error"]</div>
 }
 @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
 {
-    <div class="alert alert-danger">@ViewBag.Error</div>
+    <div class="alert alert-danger shadow-sm">@ViewBag.Error</div>
 }
 
-<div class="card shadow-sm">
+<div class="card shadow-sm border-0 rounded-4">
     <div class="card-body p-0">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="table table-modern table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>#</th>
+                    <th style="width:90px">#</th>
                     <th>Usuario</th>
                     <th>Producto</th>
-                    <th>Calificación</th>
-                    <th>Fecha</th>
-                    <th></th>
+                    <th style="width:220px">Calificación</th>
+                    <th style="width:160px">Fecha</th>
+                    <th class="text-end" style="width:280px">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -41,24 +45,48 @@
                     var i = 1;
                     foreach (var r in Model)
                     {
-                        <tr>
-                            <td>@i</td>
-                            <td>@(users.ContainsKey(r.UsuarioId) ? users[r.UsuarioId] : r.UsuarioId.ToString())</td>
-                            <td>@(prods.ContainsKey(r.ProductoId) ? prods[r.ProductoId] : r.ProductoId.ToString())</td>
+                        <tr class="row-hover">
                             <td>
-                                <span class="stars-view" aria-label="@($"{r.Calificacion} de 5")">
-                                    @for (var s = 1; s <= 5; s++)
-                                    {
-                                        <span class="star @(s <= r.Calificacion ? "active" : "")">★</span>
-                                    }
-                                </span>
+                                <span class="badge rounded-pill bg-info-subtle text-info-emphasis border">#@i</span>
                             </td>
-                            <td>@r.FechaResena.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+
+                            <td class="fw-semibold">
+                                @(users.ContainsKey(r.UsuarioId) ? users[r.UsuarioId] : r.UsuarioId.ToString())
+                            </td>
+
+                            <td class="fw-semibold">
+                                @(prods.ContainsKey(r.ProductoId) ? prods[r.ProductoId] : r.ProductoId.ToString())
+                            </td>
+
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="stars-view" aria-label="@($"{r.Calificacion} de 5")">
+                                        @for (var s = 1; s <= 5; s++)
+                                        {
+                                            <span class="star @(s <= r.Calificacion ? "active" : "")">★</span>
+                                        }
+                                    </span>
+                                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis border">
+                                        @r.Calificacion / 5
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td>@r.FechaResena.ToLocalTime().ToString("yyyy-MM-dd")</td>
+
                             <td class="text-end">
-                                <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@r.ResenaId">Editar</a>
-                                <form asp-action="Delete" asp-route-id="@r.ResenaId" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar reseña?');">Eliminar</button>
-                                </form>
+                                <div class="actions">
+                                    <a class="btn btn-sm btn-outline-secondary btn-action"
+                                       asp-action="Edit" asp-route-id="@r.ResenaId">Editar</a>
+
+                                    <form asp-action="Delete" asp-route-id="@r.ResenaId" method="post" class="m-0">
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger btn-action"
+                                                onclick="return confirm('¿Eliminar reseña?');">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         i++;
@@ -66,7 +94,7 @@
                 }
                 else
                 {
-                    <tr><td colspan="6" class="text-center py-4">Sin datos</td></tr>
+                    <tr><td colspan="6" class="text-center py-5 text-muted">Sin datos</td></tr>
                 }
             </tbody>
         </table>

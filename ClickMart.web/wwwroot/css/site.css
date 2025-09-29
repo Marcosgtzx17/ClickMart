@@ -20,3 +20,703 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* ===================== THEME TOKENS ===================== */
+.theme {
+    --brand: #7c3aed; /* morado botón "Nuevo producto" */
+    --accent: #14b8a6; /* turquesa franja/precio */
+    --ink: #0f172a; /* texto fuerte */
+    --muted: #64748b; /* texto suave */
+    --surface: #ffffff; /* fondo card */
+    --ring: rgba(2,6,23,.07);
+}
+
+.theme-royal {
+    --brand: #7c3aed;
+    --accent: #14b8a6;
+}
+
+.theme-ocean {
+    --brand: #2563eb;
+    --accent: #06b6d4;
+}
+
+.theme-forest {
+    --brand: #0ea5a4;
+    --accent: #22c55e;
+}
+
+/* ===================== HERO ===================== */
+.store-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(90deg, rgba(124,58,237,.12), rgba(124,58,237,.03));
+    border: 1px solid rgba(124,58,237,.18);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px var(--ring);
+}
+
+.store-title {
+    margin: 0;
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: .2px;
+}
+
+    .store-title::after {
+        content: "";
+        display: block;
+        width: 72px;
+        height: 4px;
+        margin-top: .4rem;
+        background: var(--brand);
+        border-radius: 4px;
+    }
+
+.store-subtitle {
+    margin: 0;
+    color: var(--muted);
+}
+
+.hero-actions .btn {
+    border-radius: 12px;
+    padding: .6rem 1rem;
+}
+
+/* ===================== GRID ===================== */
+.cards-grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    padding: .25rem .5rem 1rem;
+}
+
+/* ===================== CARD ===================== */
+.p-card {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface);
+    border-radius: 20px;
+    border: 1px solid #e6eaf0;
+    box-shadow: 0 12px 28px var(--ring);
+}
+
+.idx-chip {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: var(--accent);
+    color: #fff;
+    padding: .25rem .55rem;
+    font-weight: 800;
+    font-size: .85rem;
+    border-radius: 999px;
+    box-shadow: 0 4px 10px var(--ring);
+}
+
+/* Tapa gris + bloque principal */
+.p-card-hero {
+    background: #e9eff4; /* gris como tu captura */
+    height: 140px; /* sin imagen */
+}
+
+.p-card.has-img .p-card-hero {
+    height: 180px; /* más alto cuando hay imagen */
+}
+
+    .p-card.has-img .p-card-hero img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+/* Franja turquesa */
+.p-divider {
+    height: 4px;
+    background: var(--accent);
+}
+
+/* Nombre + chip precio */
+.p-name-price {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .9rem 1rem .25rem 1rem;
+}
+
+.p-link {
+    font-weight: 800;
+    color: #0f172a;
+    text-decoration: none;
+}
+
+    .p-link:hover {
+        color: #5b21b6;
+    }
+
+.price-chip {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    font-size: .95rem;
+    box-shadow: 0 6px 14px var(--ring);
+}
+
+/* Rating */
+.p-rating {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .2rem 1rem 1rem 1rem;
+    color: #64748b;
+    border-bottom: 1px dashed #e6eaf0;
+}
+
+.stars-view .star {
+    color: #cbd5e1;
+    font-size: 1.05rem;
+}
+
+    .stars-view .star.active {
+        color: #f59e0b;
+    }
+
+.rating-text {
+    font-weight: 600;
+}
+
+/* Acciones 2x2 */
+.p-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: .65rem;
+    padding: 1rem;
+}
+
+.btn-soft {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .6rem .8rem;
+    border-radius: 12px;
+    background: #fff;
+    color: #334155;
+    font-weight: 700;
+    border: 1.5px solid #cbd5e1;
+    transition: all .15s ease;
+}
+
+    .btn-soft:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px var(--ring);
+    }
+
+/* Variantes coherentes con tu screenshot */
+.btn-soft-primary {
+    border-color: #6d28d9;
+    color: #6d28d9;
+}
+    /* morado reseñar */
+    .btn-soft-primary:hover {
+        background: #6d28d9;
+        color: #fff;
+    }
+
+.btn-soft-danger {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+    .btn-soft-danger:hover {
+        background: #ef4444;
+        color: #fff;
+    }
+
+/* Botón primario del hero */
+.theme .btn-primary {
+    background-color: var(--brand) !important;
+    border-color: var(--brand) !important;
+}
+
+/* Estado vacío */
+.empty-state {
+    grid-column: 1 / -1;
+    background: #fff;
+    border: 1px dashed #e5e7eb;
+    border-radius: 16px;
+    padding: 2.5rem;
+    text-align: center;
+    color: var(--muted);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .store-title {
+        font-size: 1.6rem;
+    }
+
+    .p-name-price {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .4rem;
+    }
+
+    .price-chip {
+        align-self: flex-start;
+    }
+}
+
+/* ===================== Categoria ===================== */
+
+/* ====== Tema (mismo que Productos) ====== */
+.theme {
+    --brand: #7c3aed; /* morado */
+    --accent: #14b8a6; /* turquesa */
+    --ink: #0f172a;
+    --muted: #64748b;
+    --surface: #ffffff;
+    --ring: rgba(2,6,23,.07);
+}
+
+.theme-royal {
+    --brand: #7c3aed;
+    --accent: #14b8a6;
+}
+
+.theme-ocean {
+    --brand: #2563eb;
+    --accent: #06b6d4;
+}
+
+.theme-forest {
+    --brand: #0ea5a4;
+    --accent: #22c55e;
+}
+
+/* ====== HERO ====== */
+.store-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(90deg, rgba(124,58,237,.12), rgba(124,58,237,.03));
+    border: 1px solid rgba(124,58,237,.18);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px var(--ring);
+}
+
+.store-title {
+    margin: 0;
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: .2px;
+}
+
+    .store-title::after {
+        content: "";
+        display: block;
+        width: 72px;
+        height: 4px;
+        margin-top: .4rem;
+        background: var(--brand);
+        border-radius: 4px;
+    }
+
+.store-subtitle {
+    margin: 0;
+    color: var(--muted);
+}
+
+.hero-actions .btn {
+    border-radius: 12px;
+    padding: .6rem 1rem;
+}
+
+/* ====== Contenedor ====== */
+.card-surface {
+    background: var(--surface);
+    border-radius: 16px;
+}
+
+/* ====== Tabla moderna (vertical list) ====== */
+.table-modern thead th {
+    background: linear-gradient(180deg, rgba(124,58,237,.10), #fff);
+    border-bottom: 1px solid rgba(124,58,237,.20);
+    color: var(--ink);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: .8rem;
+    letter-spacing: .04em;
+    vertical-align: middle;
+}
+
+.cat-table tbody tr:nth-child(even) {
+    background: #fbfdff;
+}
+
+.row-hover:hover {
+    background: rgba(124,58,237,.06) !important;
+    box-shadow: inset 4px 0 0 0 var(--brand); /* barra lateral al hover */
+}
+
+.table-modern td, .table-modern th {
+    padding: .9rem 1rem;
+}
+
+/* ====== Chip índice (#) ====== */
+.index-chip {
+    background: var(--accent);
+    color: #fff;
+    padding: .25rem .55rem;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: .85rem;
+    box-shadow: 0 4px 10px var(--ring);
+}
+
+/* ====== Acciones iguales y alineadas ====== */
+.actions {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr; /* mismo ancho para todos */
+    gap: .5rem;
+    justify-content: end;
+}
+
+.btn-action {
+    width: 100%;
+    padding: .42rem .65rem;
+    border-radius: .6rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Paleta coherente con el tema para botones outline */
+.theme .btn-primary {
+    background-color: var(--brand) !important;
+    border-color: var(--brand) !important;
+}
+
+.theme .btn-outline-info {
+    color: #0ea5e9;
+    border-color: #0ea5e9;
+}
+
+   .theme .btn-outline-info:hover {
+        background: #0ea5e9;
+        color: #fff;
+    }
+
+/* ===================== Pedidos ===================== */
+
+/* ===== Theme tokens (se apoyan en Bootstrap) ===== */
+:root {
+    --brand: var(--bs-primary, #7c3aed); /* morado del navbar/botón */
+    --accent: #14b8a6; /* turquesa complementaria */
+    --ink: #0f172a;
+    --ring: rgba(2,6,23,.07);
+}
+
+/* ===== HERO (tu contenedor superior actual) ===== */
+.d-flex.justify-content-between.align-items-center.p-3.mb-4.rounded-4.border.bg-light.shadow-sm {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--brand) 14%, #ffffff), #ffffff);
+    border-color: color-mix(in srgb, var(--brand) 28%, #ffffff) !important;
+    box-shadow: 0 10px 30px var(--ring) !important;
+}
+
+    .d-flex.justify-content-between.align-items-center.p-3.mb-4.rounded-4.border.bg-light.shadow-sm .fw-bold {
+        color: var(--ink);
+        font-weight: 800 !important;
+        letter-spacing: .2px;
+    }
+    /* barra bajo el título (ya tienes un <div class="mt-2" ...>) */
+    .d-flex.justify-content-between.align-items-center.p-3.mb-4.rounded-4.border.bg-light.shadow-sm .mt-2 {
+        width: 72px;
+        height: 4px;
+        border-radius: 4px;
+        background: var(--brand) !important;
+    }
+
+/* ===== Card contenedora de la tabla ===== */
+.card.border-0.rounded-4 {
+    border-radius: 16px !important;
+}
+
+.card .table {
+    margin-bottom: 0;
+}
+
+/* ===== Tabla moderna ===== */
+.table thead th {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 10%, #ffffff), #ffffff);
+    border-bottom: 1px solid color-mix(in srgb, var(--brand) 22%, #ffffff) !important;
+    color: var(--ink);
+    text-transform: uppercase;
+    font-weight: 800;
+    font-size: .8rem;
+    letter-spacing: .04em;
+    vertical-align: middle;
+}
+
+.table td, .table th {
+    padding: .9rem 1rem;
+}
+
+/* zebra + hover con barra lateral */
+.table-striped > tbody > tr:nth-of-type(2n+1) > * {
+    /* mantener zebra de Bootstrap; nada extra aquí */
+}
+
+.table-hover > tbody > tr:hover > * {
+    background-color: rgba(var(--bs-primary-rgb, 124,58,237), .06) !important;
+    box-shadow: inset 4px 0 0 0 var(--brand);
+}
+
+/* ===== Chips / badges que ya usas ===== */
+.table .badge.rounded-pill.border {
+    background: #fff;
+    box-shadow: 0 4px 10px var(--ring);
+    font-weight: 800;
+}
+
+.table .badge.bg-info-subtle.text-info-emphasis.border {
+    border-color: rgba(13, 202, 240, .65) !important; /* info */
+}
+
+.table .badge.bg-secondary-subtle.text-secondary-emphasis.border {
+    border-color: #94a3b8 !important; /* neutral */
+}
+
+/* Monto ($) más “chip” */
+.table td .badge.rounded-pill.bg-info-subtle {
+    padding: .35rem .7rem;
+}
+
+/* Fecha compacta */
+.ord-date small {
+    font-size: .78rem;
+}
+
+/* ===== Acciones alineadas ===== */
+.text-end .btn-group.btn-group-sm .btn {
+    min-width: 96px; /* mismo ancho */
+    border-radius: .6rem !important; /* suaviza esquinas */
+    font-weight: 600;
+}
+
+    .text-end .btn-group.btn-group-sm .btn + .btn {
+        margin-left: .25rem;
+    }
+
+/* Outline hovers coherentes con tema */
+.btn-outline-info:hover {
+    color: #fff !important;
+    background-color: var(--bs-info, #0dcaf0) !important;
+    border-color: var(--bs-info, #0dcaf0) !important;
+}
+
+.btn-outline-secondary:hover {
+    color: #fff !important;
+    background-color: #475569 !important;
+    border-color: #475569 !important;
+}
+
+.btn-outline-danger:hover {
+    color: #fff !important;
+    background-color: #ef4444 !important;
+    border-color: #ef4444 !important;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .text-end .btn-group.btn-group-sm {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: .5rem;
+    }
+
+        .text-end .btn-group.btn-group-sm .btn {
+            width: 100%;
+            margin-left: 0 !important;
+        }
+}
+/* ===== FIX VISIBILIDAD EN BADGES DENTRO DE LA TABLA ===== */
+/* Asegura que el texto nunca quede blanco sobre fondo claro */
+.table .badge.rounded-pill.border {
+    background: #fff !important;
+    font-weight: 800;
+    line-height: 1.1;
+    color: inherit; /* hereda el color del set específico */
+}
+
+/* Info (Total y #) */
+:root {
+    /* fallback si tu Bootstrap no tiene *-text-emphasis (<=5.2) */
+    --fix-info-ink: var(--bs-info-text-emphasis, #055160);
+    --fix-sec-ink: var(--bs-secondary-color, #495057);
+}
+
+.table .badge.bg-info-subtle.border {
+    color: var(--fix-info-ink) !important;
+    border-color: color-mix(in srgb, var(--bs-info, #0dcaf0) 55%, #ffffff) !important;
+}
+
+/* Secundario/Neutro (Método, Pago cuanPdo no hay estado especial) */
+.table .badge.bg-secondary-subtle.border {
+    color: var(--fix-sec-ink) !important;
+    border-color: #94a3b8 !important;
+}
+
+/* Si usas otras variantes, asegura contraste igual */
+.table .badge.bg-success-subtle.border {
+    color: var(--bs-success-text-emphasis, #0f5132) !important;
+}
+
+.table .badge.bg-warning-subtle.border {
+    color: var(--bs-warning-text-emphasis, #664d03) !important;
+}
+
+.table .badge.bg-danger-subtle.border {
+    color: var(--bs-danger-text-emphasis, #842029) !important;
+}
+
+/* Monto: números claros y monoespaciados visualmente */
+.table td .badge.rounded-pill.bg-info-subtle {
+    padding: .35rem .7rem;
+    font-variant-numeric: tabular-nums;
+}
+/* ===================== Usuarios ===================== */
+
+/* ====== Role badges (colores con tu paleta) ====== */
+.role-badge {
+    display: inline-block;
+    padding: .28rem .55rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: .82rem;
+    background: #fff;
+    border: 1px solid #94a3b8;
+    color: #475569;
+}
+
+    .role-badge.admin {
+        color: var(--brand, #7c3aed);
+        border-color: var(--brand, #7c3aed);
+        background: color-mix(in srgb, var(--brand, #7c3aed) 10%, #ffffff);
+    }
+
+    .role-badge.staff {
+        color: var(--accent, #14b8a6);
+        border-color: var(--accent, #14b8a6);
+        background: color-mix(in srgb, var(--accent, #14b8a6) 10%, #ffffff);
+    }
+
+    .role-badge.user {
+        color: #475569;
+        border-color: #94a3b8;
+    }
+
+/* (Por si esta vista no tenía todavía estas clases globales) */
+.actions {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr; /* mismo ancho */
+    gap: .5rem;
+    justify-content: end;
+}
+
+.btn-action {
+    width: 100%;
+    padding: .42rem .65rem;
+    border-radius: .6rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* === Badges de Rol (paleta consistente) === */
+.role-badge {
+    display: inline-block;
+    padding: .22rem .5rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: .78rem; /* más compacto */
+    background: #fff;
+    border: 1px solid #94a3b8;
+    color: #475569;
+    white-space: nowrap;
+}
+
+    .role-badge.admin {
+        color: var(--brand, #7c3aed);
+        border-color: var(--brand, #7c3aed);
+        background: color-mix(in srgb, var(--brand, #7c3aed) 10%, #ffffff);
+    }
+
+    .role-badge.staff {
+        color: var(--accent, #14b8a6);
+        border-color: var(--accent, #14b8a6);
+        background: color-mix(in srgb, var(--accent, #14b8a6) 10%, #ffffff);
+    }
+
+    .role-badge.user {
+        color: #475569;
+        border-color: #94a3b8;
+    }
+
+/* === Acciones en “podio” (ahorra ancho) === */
+.actions-podium {
+    display: inline-grid; /* respeta el ancho de contenido y alinea con text-end */
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: .35rem;
+    min-width: 180px; /* columna más angosta pero usable */
+}
+
+    .actions-podium .btn {
+        padding: .35rem .6rem; /* más pequeño que btn-sm por defecto */
+        border-radius: .55rem;
+        font-weight: 600;
+    }
+
+    .actions-podium .podium-top {
+        grid-column: 1 / 3; /* ocupa ambas columnas arriba */
+        justify-self: center;
+        width: 80%; /* un poco más corto para “podio” */
+    }
+
+/* Por si en esta vista no estaban aún estas utilidades globales */
+.row-hover:hover {
+    background: rgba(124,58,237,.06) !important;
+    box-shadow: inset 4px 0 0 0 var(--brand, #7c3aed);
+}
+
+.table-modern thead th {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand, #7c3aed) 10%, #ffffff), #ffffff);
+    border-bottom: 1px solid color-mix(in srgb, var(--brand, #7c3aed) 22%, #ffffff) !important;
+    text-transform: uppercase;
+    font-weight: 800;
+    font-size: .8rem;
+    letter-spacing: .04em;
+}
+
+/* Responsive: en móvil los tres botones van 2x2 */
+@media (max-width: 768px) {
+    .actions-podium {
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+        .actions-podium .podium-top {
+            width: 100%;
+        }
+}
+

@@ -1,56 +1,92 @@
 ﻿@model IEnumerable<ClickMart.web.DTOs.CategoriaDTOs.CategoriaResponseDTO>
 @{
     ViewData["Title"] = "Categorías";
-    var esAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador") || User.IsInRole("adminitrador") || User.IsInRole("administradores");
+    var esAdmin =
+        User.IsInRole("Admin") ||
+        User.IsInRole("Administrador") ||
+        User.IsInRole("adminitrador") ||
+        User.IsInRole("administradores");
+
+    var hayCategorias = Model?.Any() == true;
 }
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">@ViewData["Title"]</h2>
-    @if (esAdmin)
+
+<div class="theme theme-royal">
+    <!-- Puedes cambiar a theme-ocean/theme-forest -->
+    <!-- HERO (mismo diseño que Productos) -->
+    <section class="store-hero mb-4">
+        <div>
+            <h1 class="store-title">Categorías</h1>
+            <p class="store-subtitle">Gestión del catálogo ClickMart</p>
+        </div>
+        @if (esAdmin)
+        {
+            <div class="hero-actions">
+                <a asp-action="Create" class="btn btn-primary btn-lg">Nueva categoría</a>
+            </div>
+        }
+    </section>
+
+    @if (TempData["Ok"] != null)
     {
-        <a asp-action="Create" class="btn btn-primary">Nueva categoría</a>
+        <div class="alert alert-success shadow-sm">@TempData["Ok"]</div>
     }
-</div>
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger shadow-sm">@TempData["Error"]</div>
+    }
+    @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
+    {
+        <div class="alert alert-danger shadow-sm">@ViewBag.Error</div>
+    }
 
-@if (TempData["Ok"] != null)
-{
-     <div class="alert alert-success">@TempData["Ok"]</div>
-}
-@if (TempData["Error"] != null)
-{
-     <div class="alert alert-danger">@TempData["Error"]</div>
-}
-@if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
-{
-     <div class="alert alert-danger">@ViewBag.Error</div>
-}
-
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>#</th>
-                    <th>Nombre</th>
-                    <th class="text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var c in Model ?? Enumerable.Empty<ClickMart.web.DTOs.CategoriaDTOs.CategoriaResponseDTO>())
-                {
+    <!-- LISTA (tabla vertical) -->
+    <div class="card card-surface shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <table class="table table-modern mb-0 align-middle cat-table">
+                <thead>
                     <tr>
-                        <td>@c.CategoriaId</td>
-                        <td>@c.Nombre</td>
-                        <td class="text-end">
-                            <a asp-action="Details" asp-route-id="@c.CategoriaId" class="btn btn-sm btn-outline-secondary">Ver</a>
-                            @if (esAdmin)
-                            {
-                                <a asp-action="Edit" asp-route-id="@c.CategoriaId" class="btn btn-sm btn-warning">Editar</a>
-                                <a asp-action="Delete" asp-route-id="@c.CategoriaId" class="btn btn-sm btn-danger">Eliminar</a>
-                            }
-                        </td>
+                        <th style="width:90px">#</th>
+                        <th>Nombre</th>
+                        <th class="text-end" style="width:420px">Acciones</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @if (hayCategorias)
+                    {
+                        var i = 1;
+                        foreach (var c in Model!)
+                        {
+                            <tr class="row-hover">
+                                <td><span class="index-chip">#@i</span></td>
+                                <td class="fw-semibold">@c.Nombre</td>
+                                <td>
+                                    <div class="actions">
+                                        <a asp-action="Details" asp-route-id="@c.CategoriaId"
+                                           class="btn btn-sm btn-outline-info btn-action">Ver</a>
+
+                                        @if (esAdmin)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@c.CategoriaId"
+                                               class="btn btn-sm btn-outline-secondary btn-action">Editar</a>
+
+                                            <a asp-action="Delete" asp-route-id="@c.CategoriaId"
+                                               class="btn btn-sm btn-outline-danger btn-action">Eliminar</a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center py-5 text-muted">No hay categorías</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
+
 </div>
