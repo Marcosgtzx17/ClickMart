@@ -2,16 +2,33 @@
 @{
     ViewData["Title"] = "Editar reseña";
 }
-<h2>@ViewData["Title"]</h2>
-<hr />
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="ResenaId" />
-    <partial name="_ResenaForm" model="Model" />
+
+<!-- HERO consistente -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
     <div>
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+        <h1 class="store-title mb-1">Editar reseña</h1>
+        <p class="store-subtitle mb-0">Ajusta la retroalimentación sin perder el tono</p>
     </div>
+    <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
+</div>
+
+<form asp-action="Edit" method="post" class="card shadow-sm border-0 rounded-4 p-3 p-md-4 form-card">
+    <input type="hidden" asp-for="ResenaId" />
+    <div asp-validation-summary="ModelOnly" class="invalid-feedback d-block mb-3"></div>
+
+    <partial name="_ResenaForm" model="Model" />
+
+    <div class="form-actions mt-4">
+        <button type="submit" class="btn btn-primary btn-action">Guardar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-action">Cancelar</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
+    {
+        <div class="alert alert-danger mt-3 mb-0">@ViewBag.Error</div>
+    }
 </form>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

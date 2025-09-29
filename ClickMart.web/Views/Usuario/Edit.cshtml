@@ -3,53 +3,64 @@
     ViewData["Title"] = "Editar usuario";
     var rolActual = ViewBag.RolActual as string ?? "(sin rol)";
 }
-<h2>@ViewData["Title"]</h2>
 
-<form asp-action="Edit" method="post" class="card shadow-sm p-3">
+<!-- HERO consistente -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Editar usuario</h1>
+        <p class="store-subtitle mb-0">Actualiza la información del perfil</p>
+    </div>
+    <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
+</div>
+
+<form asp-action="Edit" method="post" class="card shadow-sm border-0 rounded-4 p-3 p-md-4 form-card">
     <input type="hidden" name="id" value="@ViewBag.Id" />
     @Html.HiddenFor(m => m.RolId)  <!-- Conserva el rol en el POST -->
 
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="ModelOnly" class="invalid-feedback d-block mb-3"></div>
 
     <div class="row g-3">
         <div class="col-md-6">
-            <label asp-for="Nombre" class="form-label"></label>
+            <label asp-for="Nombre" class="form-label form-label-ux">Nombre</label>
             <input asp-for="Nombre" class="form-control" />
-            <span asp-validation-for="Nombre" class="text-danger"></span>
+            <span asp-validation-for="Nombre" class="invalid-feedback d-block"></span>
         </div>
 
         <div class="col-md-6">
-            <label asp-for="Email" class="form-label"></label>
+            <label asp-for="Email" class="form-label form-label-ux">Email</label>
             <input asp-for="Email" class="form-control" />
-            <span asp-validation-for="Email" class="text-danger"></span>
+            <span asp-validation-for="Email" class="invalid-feedback d-block"></span>
         </div>
 
         <div class="col-md-6">
-            <label asp-for="Telefono" class="form-label"></label>
+            <label asp-for="Telefono" class="form-label form-label-ux">Teléfono</label>
             <input asp-for="Telefono" class="form-control" />
-            <span asp-validation-for="Telefono" class="text-danger"></span>
+            <span asp-validation-for="Telefono" class="invalid-feedback d-block"></span>
         </div>
 
         <div class="col-md-6">
-            <label asp-for="Direccion" class="form-label"></label>
+            <label asp-for="Direccion" class="form-label form-label-ux">Dirección</label>
             <input asp-for="Direccion" class="form-control" />
-            <span asp-validation-for="Direccion" class="text-danger"></span>
+            <span asp-validation-for="Direccion" class="invalid-feedback d-block"></span>
         </div>
 
         <!-- Rol (solo lectura) -->
         <div class="col-md-6">
-            <label class="form-label">Rol</label>
+            <label class="form-label form-label-ux">Rol</label>
             <input class="form-control" value="@rolActual" disabled />
             <small class="text-muted">El rol no se puede modificar desde esta pantalla.</small>
         </div>
     </div>
 
-    <div class="mt-3 d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Actualizar</button>
-        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    <div class="form-actions mt-4">
+        <button type="submit" class="btn btn-primary btn-action">Actualizar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-action">Volver</a>
     </div>
 
-    <div class="text-danger mt-2">@ViewBag.Error</div>
+    @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
+    {
+        <div class="alert alert-danger mt-3 mb-0">@ViewBag.Error</div>
+    }
 </form>
 
 @section Scripts {

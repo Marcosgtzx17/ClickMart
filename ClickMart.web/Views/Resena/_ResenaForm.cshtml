@@ -1,18 +1,15 @@
 ﻿@model ClickMart.web.DTOs.ResenaDTOs.ResenaFormVM
 
 @{
-    // ==== Cálculos previos para evitar @{} dentro de @if ====
-    // Usuario para mostrar
+    // ==== Cálculos previos (igual que tenías) ====
     var displayUser = !string.IsNullOrWhiteSpace(Model.UsuarioEmail)
         ? Model.UsuarioEmail
         : (!string.IsNullOrWhiteSpace(Model.UsuarioNombre)
             ? Model.UsuarioNombre
             : Model.UsuarioId.ToString());
 
-    // ¿Se bloquea el producto? (Edit o Create con producto preseleccionado)
     var lockProduct = Model.ResenaId.HasValue || (Model.ProductoId > 0);
 
-    // Nombre del producto si está bloqueado
     string productName = string.Empty;
     if (lockProduct)
     {
@@ -21,63 +18,65 @@
     }
 }
 
-<!-- ===== Usuario (siempre readonly) ===== -->
-<div class="mb-3">
-    <label asp-for="UsuarioId" class="form-label">Usuario</label>
-    <input type="hidden" asp-for="UsuarioId" />
-    <input class="form-control" value="@displayUser" disabled />
-    <span asp-validation-for="UsuarioId" class="text-danger"></span>
-</div>
+<!-- ====== FORM GRID (match visual del resto) ====== -->
+<div class="row g-3">
 
-<!-- ===== Producto (readonly en Edit o si viene preseleccionado en Create) ===== -->
-<div class="mb-3">
-    <label asp-for="ProductoId" class="form-label">Producto</label>
-
-    @if (lockProduct)
-    {
-        <input type="hidden" asp-for="ProductoId" />
-        <input class="form-control" value="@productName" disabled />
-    }
-    else
-    {
-        <select asp-for="ProductoId" class="form-select" asp-items="Model.Productos">
-            <option value="">-- Selecciona --</option>
-        </select>
-    }
-
-    <span asp-validation-for="ProductoId" class="text-danger"></span>
-</div>
-
-<!-- ===== Calificación con estrellas ===== -->
-<div class="mb-3">
-    <label asp-for="Calificacion" class="form-label">Calificación</label>
-
-    <!-- Hidden real field (para el model binding) -->
-    <input asp-for="Calificacion" type="hidden" id="Calificacion" />
-
-    <!-- Widget de estrellas -->
-    <div class="star-input" data-input-id="Calificacion" role="radiogroup" aria-label="Calificación (1 a 5)">
-        <button type="button" class="star" data-value="1" role="radio" aria-label="1 estrella" aria-checked="false">★</button>
-        <button type="button" class="star" data-value="2" role="radio" aria-label="2 estrellas" aria-checked="false">★</button>
-        <button type="button" class="star" data-value="3" role="radio" aria-label="3 estrellas" aria-checked="false">★</button>
-        <button type="button" class="star" data-value="4" role="radio" aria-label="4 estrellas" aria-checked="false">★</button>
-        <button type="button" class="star" data-value="5" role="radio" aria-label="5 estrellas" aria-checked="false">★</button>
+    <!-- Usuario (readonly) -->
+    <div class="col-12 col-md-6">
+        <label asp-for="UsuarioId" class="form-label form-label-ux">Usuario</label>
+        <input type="hidden" asp-for="UsuarioId" />
+        <input class="form-control" value="@displayUser" disabled />
+        <span asp-validation-for="UsuarioId" class="invalid-feedback d-block"></span>
     </div>
 
-    <small class="text-muted">Usa clic o flechas del teclado (←/→) para ajustar.</small>
-    <span asp-validation-for="Calificacion" class="text-danger"></span>
-</div>
+    <!-- Producto (readonly si viene bloqueado) -->
+    <div class="col-12 col-md-6">
+        <label asp-for="ProductoId" class="form-label form-label-ux">Producto</label>
+        @if (lockProduct)
+        {
+            <input type="hidden" asp-for="ProductoId" />
+            <input class="form-control" value="@productName" disabled />
+        }
+        else
+        {
+            <select asp-for="ProductoId" class="form-select" asp-items="Model.Productos">
+                <option value="">-- Selecciona --</option>
+            </select>
+        }
+        <span asp-validation-for="ProductoId" class="invalid-feedback d-block"></span>
+    </div>
 
-<!-- ===== Comentario ===== -->
-<div class="mb-3">
-    <label asp-for="Comentario" class="form-label">Comentario</label>
-    <textarea asp-for="Comentario" class="form-control" rows="3"></textarea>
-    <span asp-validation-for="Comentario" class="text-danger"></span>
-</div>
+    <!-- Calificación (estrellas) -->
+    <div class="col-12 col-md-6">
+        <label asp-for="Calificacion" class="form-label form-label-ux">Calificación</label>
+        <!-- Campo real para el model binding -->
+        <input asp-for="Calificacion" type="hidden" id="Calificacion" />
 
-<!-- ===== Fecha ===== -->
-<div class="mb-3">
-    <label asp-for="FechaResena" class="form-label">Fecha</label>
-    <input asp-for="FechaResena" class="form-control" type="datetime-local" />
-    <span asp-validation-for="FechaResena" class="text-danger"></span>
+        <!-- Widget de estrellas (usa tu stars.js / stars.css) -->
+        <div class="star-input border rounded-3 p-2 px-3" data-input-id="Calificacion"
+             role="radiogroup" aria-label="Calificación (1 a 5)">
+            <button type="button" class="star" data-value="1" role="radio" aria-label="1 estrella" aria-checked="false">★</button>
+            <button type="button" class="star" data-value="2" role="radio" aria-label="2 estrellas" aria-checked="false">★</button>
+            <button type="button" class="star" data-value="3" role="radio" aria-label="3 estrellas" aria-checked="false">★</button>
+            <button type="button" class="star" data-value="4" role="radio" aria-label="4 estrellas" aria-checked="false">★</button>
+            <button type="button" class="star" data-value="5" role="radio" aria-label="5 estrellas" aria-checked="false">★</button>
+        </div>
+        <small class="text-muted">Usa clic o flechas del teclado (←/→) para ajustar.</small>
+        <span asp-validation-for="Calificacion" class="invalid-feedback d-block"></span>
+    </div>
+
+    <!-- Fecha -->
+    <div class="col-12 col-md-6">
+        <label asp-for="FechaResena" class="form-label form-label-ux">Fecha</label>
+        <input asp-for="FechaResena" class="form-control" type="datetime-local" />
+        <span asp-validation-for="FechaResena" class="invalid-feedback d-block"></span>
+    </div>
+
+    <!-- Comentario -->
+    <div class="col-12">
+        <label asp-for="Comentario" class="form-label form-label-ux">Comentario</label>
+        <textarea asp-for="Comentario" class="form-control" rows="4" placeholder="Comparte tu experiencia..."></textarea>
+        <span asp-validation-for="Comentario" class="invalid-feedback d-block"></span>
+    </div>
+
 </div>

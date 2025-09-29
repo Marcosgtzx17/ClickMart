@@ -720,3 +720,508 @@ body {
         }
 }
 
+/* Acciones 2×2 compactas para Pedidos */
+.actions-2x2{
+  display:inline-grid;                     /* respeta el alineado a la derecha */
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:.35rem;                              /* separación entre botones */
+  min-width:220px;                         /* más angosto = más espacio a la derecha */
+}
+.actions-2x2 .btn{
+  padding:.42rem .6rem;                    /* un poco más compacto que btn-sm */
+  border-radius:.6rem;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+/* Responsive (si el ancho es muy pequeño se apilan a una columna) */
+@media (max-width: 480px){
+  .actions-2x2{ grid-template-columns: 1fr; min-width: auto; width:100%; }
+}
+/* Acciones 2×2 compactas para Pedidos */
+.actions-2x2 {
+    display: inline-grid; /* respeta el alineado a la derecha */
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: .35rem; /* separación entre botones */
+    min-width: 220px; /* más angosto = más espacio a la derecha */
+}
+
+    .actions-2x2 .btn {
+        padding: .42rem .6rem; /* un poco más compacto que btn-sm */
+        border-radius: .6rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+/* Responsive (si el ancho es muy pequeño se apilan a una columna) */
+@media (max-width: 480px) {
+    .actions-2x2 {
+        grid-template-columns: 1fr;
+        min-width: auto;
+        width: 100%;
+    }
+}
+
+/* ===================== Detalles de pedido ===================== */
+/* ========== Detalle de producto (card) ========== */
+.product-card {
+    background: #fff;
+}
+
+.product-media {
+    width: 100%;
+    height: 340px; /* alto consistente; responsive */
+    background: #f3f6fb;
+    border: 1px solid #e6eaf0;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.object-cover {
+    object-fit: cover;
+}
+
+.product-media--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg,#f6f7fb 0%,#edf2f7 100%);
+    color: #94a3b8;
+    font-weight: 700;
+    border: 1px dashed #cbd5e1;
+}
+
+/* Chips ya compatibles con tu paleta global */
+.price-chip {
+    background: var(--accent, #14b8a6);
+    color: #fff;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: .35rem .7rem;
+    font-size: .95rem;
+    box-shadow: 0 6px 14px rgba(2,6,23,.07);
+}
+
+/* Grid de metadatos */
+.detail-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: .75rem 1rem;
+}
+
+.detail-item {
+    padding: .4rem 0;
+    border-bottom: 1px dashed #e6eaf0;
+}
+
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .detail-item .label {
+        font-size: .8rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #64748b;
+        font-weight: 800;
+    }
+
+    .detail-item .value {
+        color: #0f172a;
+    }
+
+/* Acciones */
+.detail-actions {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: .5rem;
+    justify-content: end;
+}
+
+.btn-action {
+    width: 100%;
+    padding: .5rem .75rem;
+    border-radius: .6rem;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .product-media {
+        height: 280px;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-actions {
+        grid-auto-flow: row;
+    }
+}
+/* ===== Visibilidad de chips en Detalle de producto ===== */
+/* Aplica dentro de la card y fuera de tablas */
+.product-card .badge.rounded-pill.border {
+    background: #fff; /* base clara */
+    font-weight: 800; /* legible */
+    box-shadow: 0 4px 10px rgba(2,6,23,.07);
+    line-height: 1.1;
+}
+
+/* Chip del # (usualmente bg-info-subtle) */
+.product-card .badge.bg-info-subtle.border {
+    color: var(--bs-info-text-emphasis, #055160) !important; /* texto visible */
+    border-color: color-mix(in srgb, var(--bs-info, #0dcaf0) 55%, #fff) !important;
+    background: color-mix(in srgb, var(--bs-info, #0dcaf0) 12%, #fff) !important; /* leve tinte */
+}
+
+/* Chip del Stock (si usas bg-success-subtle) */
+.product-card .badge.bg-success-subtle.border {
+    color: var(--bs-success-text-emphasis, #0f5132) !important;
+    border-color: color-mix(in srgb, var(--bs-success, #198754) 55%, #fff) !important;
+    background: color-mix(in srgb, var(--bs-success, #198754) 10%, #fff) !important;
+}
+
+/* Si el stock lo muestras con 'info' también, cúbrelo igual */
+.product-card .badge[data-chip="stock"].border {
+    color: var(--bs-success-text-emphasis, #0f5132) !important;
+    border-color: #34d399 !important;
+    background: #ecfdf5 !important;
+}
+
+/* Ajuste por si tenías las clases personalizadas de chips (no rompe si no existen) */
+.product-card .chip-id {
+    background: #ede9fe;
+    color: #5b21b6;
+    border: 1px solid #a78bfa;
+    font-weight: 800;
+}
+
+.product-card .chip-stock {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #34d399;
+    font-weight: 800;
+}
+
+/* ===================== Layout general ===================== */
+
+/* ===== ClickMart Navbar ===== */
+.navbar-clickmart {
+    /* Gradiente base logo: #6a38ff -> #ff4fd8 (ajústalo si tu branding cambia) */
+    background: linear-gradient(90deg, #6a38ff 0%, #7d49ff 22%, #9a4eff 48%, #c54ef4 72%, #ff4fd8 100%);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+    /* Marca */
+    .navbar-clickmart .navbar-brand img {
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,.25));
+    }
+
+    .navbar-clickmart .navbar-brand span {
+        letter-spacing: 0.3px;
+    }
+
+    /* Enlaces principales */
+    .navbar-clickmart .nav-link.cm-link {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .5rem .75rem;
+        color: rgba(255,255,255,.95) !important;
+        font-weight: 500;
+        border-radius: .75rem;
+        transition: transform .15s ease, background-color .15s ease, color .15s ease;
+    }
+
+        /* Micro-underline animado */
+        .navbar-clickmart .nav-link.cm-link::after {
+            content: "";
+            position: absolute;
+            left: .75rem;
+            right: .75rem;
+            bottom: .35rem;
+            height: 2px;
+            background: rgba(255,255,255,.55);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .2s ease;
+            border-radius: 1px;
+        }
+
+        /* Hover/Focus */
+        .navbar-clickmart .nav-link.cm-link:hover,
+        .navbar-clickmart .nav-link.cm-link:focus {
+            background: rgba(255,255,255,.12);
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+            .navbar-clickmart .nav-link.cm-link:hover::after,
+            .navbar-clickmart .nav-link.cm-link:focus::after {
+                transform: scaleX(1);
+            }
+
+        /* Activo (puedes aplicar .active desde tu acción o con un helper) */
+        .navbar-clickmart .nav-link.cm-link.active,
+        .navbar-clickmart .nav-link.cm-link[aria-current="page"] {
+            background: rgba(255,255,255,.18);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
+        }
+
+            .navbar-clickmart .nav-link.cm-link.active::after {
+                transform: scaleX(1);
+            }
+
+/* Botones del extremo derecho */
+.cm-btn {
+    --ring: rgba(255,255,255,.35);
+    border-color: rgba(255,255,255,.6) !important;
+    backdrop-filter: saturate(1.2) blur(2px);
+}
+
+    .cm-btn:hover {
+        box-shadow: 0 0 0 .2rem var(--ring);
+    }
+
+.cm-btn-secondary {
+    color: #3f1e7a !important; /* morado oscuro legible */
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(255,255,255,.9);
+}
+
+    .cm-btn-secondary:hover {
+        background: #ffffff;
+        box-shadow: 0 6px 22px rgba(0,0,0,.18);
+    }
+
+/* Toggler contraste */
+.navbar-clickmart .navbar-toggler {
+    border-color: rgba(255,255,255,.6);
+}
+
+    .navbar-clickmart .navbar-toggler:focus {
+        box-shadow: 0 0 0 .2rem rgba(255,255,255,.35);
+    }
+
+/* Íconos del menú: tamaño y alineación */
+.navbar-clickmart .nav-link .bi {
+    font-size: 1rem;
+    opacity: .95;
+}
+
+/* Sombra suave de la barra para separar del contenido */
+.navbar-clickmart.shadow-sm {
+    box-shadow: 0 6px 24px rgba(0,0,0,.18);
+}
+
+/* Accesibilidad: alto contraste cuando el usuario lo solicita */
+@media (prefers-contrast: more) {
+    .navbar-clickmart .nav-link.cm-link::after {
+        background: #fff;
+    }
+
+    .navbar-clickmart .nav-link.cm-link {
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
+    }
+}
+
+/* Espaciado superior del main para barras sticky (si lo necesitas) */
+/* main[role="main"] { padding-top: .25rem; } */
+
+/* ====== Detalle de categoría (match con producto) ====== */
+.category-card {
+    background: #fff;
+}
+
+/* Chip de ID con alto contraste (igual que en producto) */
+.chip-id {
+    display: inline-block;
+    padding: .35rem .65rem;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: .9rem;
+    line-height: 1;
+    background: #ede9fe;
+    color: #5b21b6;
+    border: 1px solid #a78bfa;
+    box-shadow: 0 4px 10px rgba(2,6,23,.07);
+}
+
+/* Grid de datos (scope de categoría para no interferir con otros) */
+.detail-grid-cat {
+    display: grid;
+    gap: .75rem 1rem;
+    grid-template-columns: 200px 1fr;
+}
+
+.detail-item-cat {
+    padding: .5rem 0;
+    border-bottom: 1px dashed #e6eaf0;
+}
+
+    .detail-item-cat:last-child {
+        border-bottom: none;
+    }
+
+.label-cat {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #64748b;
+    font-weight: 800;
+}
+
+.value-cat {
+    color: #0f172a;
+}
+
+/* Acciones */
+.detail-actions-cat {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: .5rem;
+    justify-content: end;
+}
+
+.btn-action {
+    width: 100%;
+    padding: .5rem .75rem;
+    border-radius: .6rem;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cat-media {
+        height: 220px;
+    }
+
+    .detail-grid-cat {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-actions-cat {
+        grid-auto-flow: row;
+    }
+}
+
+/* ====== Detalle de categoría (sin imagen) ====== */
+.category-card {
+    background: #fff;
+}
+
+/* Chip de ID (match con paleta morado/teal) */
+.chip-id {
+    display: inline-block;
+    padding: .35rem .65rem;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: .9rem;
+    line-height: 1;
+    background: #ede9fe;
+    color: #5b21b6;
+    border: 1px solid #a78bfa;
+    box-shadow: 0 4px 10px rgba(2,6,23,.07);
+}
+
+/* Grilla de datos */
+.detail-grid-cat {
+    display: grid;
+    gap: .75rem 1rem;
+    grid-template-columns: 200px 1fr;
+}
+
+.detail-item-cat {
+    padding: .5rem 0;
+    border-bottom: 1px dashed #e6eaf0;
+}
+
+    .detail-item-cat:last-child {
+        border-bottom: none;
+    }
+
+.label-cat {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #64748b;
+    font-weight: 800;
+}
+
+.value-cat {
+    color: #0f172a;
+}
+
+/* Acciones */
+.detail-actions-cat {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: .5rem;
+    justify-content: end;
+}
+
+.btn-action {
+    width: 100%;
+    padding: .5rem .75rem;
+    border-radius: .6rem;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .detail-grid-cat {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-actions-cat {
+        grid-auto-flow: row;
+    }
+}
+/*Categoria Editar*/
+/* Tarjeta de formulario */
+.form-card .form-label-ux {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #64748b;
+    font-weight: 800;
+}
+
+.form-control:focus {
+    border-color: var(--brand, #7c3aed);
+    box-shadow: 0 0 0 .25rem rgba(124,58,237,.15);
+}
+
+/* Acciones con mismo ancho (match otras vistas) */
+.form-actions {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: .5rem;
+    justify-content: end;
+}
+
+.btn-action {
+    width: 100%;
+    padding: .5rem .75rem;
+    border-radius: .6rem;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width:768px) {
+    .form-actions {
+        grid-auto-flow: row;
+    }
+}
+
+

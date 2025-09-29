@@ -7,56 +7,92 @@
     // Construimos la URL absoluta de la API y del endpoint de imagen
     var api = Config["ApiBaseUrl"] ?? "";
     if (!api.EndsWith("/")) api += "/";
-    if (!api.EndsWith("/api/")) api = api.TrimEnd('/') + "/api/"; // normaliza
+    if (!api.EndsWith("/api/")) api = api.TrimEnd('/') + "/api/";
     var imgUrl = $"{api}producto/{Model.ProductoId}/imagen";
 
-    // (Opcional) Flag para mostrar botón Editar solo si es admin
+    // Mostrar editar solo si es admin
     var esAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador") || User.IsInRole("adminitrador");
 }
 
-<h2>@ViewData["Title"]</h2>
-
-<dl class="row">
-    <dt class="col-sm-2">Id</dt>
-    <dd class="col-sm-10">@Model.ProductoId</dd>
-
-    <dt class="col-sm-2">Nombre</dt>
-    <dd class="col-sm-10">@Model.Nombre</dd>
-
-    <dt class="col-sm-2">Descripción</dt>
-    <dd class="col-sm-10">@Model.Descripcion</dd>
-
-    <dt class="col-sm-2">Talla</dt>
-    <dd class="col-sm-10">@Model.Talla</dd>
-
-    <dt class="col-sm-2">Precio</dt>
-    <dd class="col-sm-10">$ @Model.Precio</dd>
-
-    <dt class="col-sm-2">Marca</dt>
-    <dd class="col-sm-10">@Model.Marca</dd>
-
-    <dt class="col-sm-2">Stock</dt>
-    <dd class="col-sm-10">@Model.Stock</dd>
-
-    <dt class="col-sm-2">Categoría</dt>
-    <dd class="col-sm-10">@Model.CategoriaId</dd>
-
-    <dt class="col-sm-2">Distribuidor</dt>
-    <dd class="col-sm-10">@Model.DistribuidorId</dd>
-</dl>
-
-@if (Model.TieneImagen)
-{
-    <div class="mb-3">
-        <img class="img-thumbnail"
-             src="@imgUrl"
-             alt="imagen producto"
-             style="max-width:300px" />
+<!-- HERO consistente con el resto -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">@Model.Nombre</h1>
+        <p class="store-subtitle mb-0">Detalle de producto</p>
     </div>
-}
+    <div class="d-inline-flex align-items-center gap-2">
+        @if (esAdmin)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.ProductoId" class="btn btn-outline-secondary">Editar</a>
+        }
+        <a asp-action="Index" class="btn btn-primary">Volver al listado</a>
+    </div>
+</div>
 
-@if (esAdmin)
-{
-    <a asp-action="Edit" asp-route-id="@Model.ProductoId" class="btn btn-warning">Editar</a>
-}
-<a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+<!-- TARJETA -->
+<div class="card product-card shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="row g-0">
+        <!-- Media / Imagen -->
+        <div class="col-12 col-md-5 p-3 p-md-4">
+            <div class="product-media">
+                @if (Model.TieneImagen)
+                {
+                    <img src="@imgUrl" alt="Imagen de @Model.Nombre" class="img-fluid rounded-3 w-100 h-100 object-cover" loading="lazy" />
+                }
+                else
+                {
+                    <div class="product-media--empty rounded-3">
+                        <span>Sin imagen</span>
+                    </div>
+                }
+            </div>
+
+            <!-- Chips destacados debajo de la imagen -->
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <span class="badge rounded-pill bg-info-subtle text-info-emphasis border">#@Model.ProductoId</span>
+                <span class="price-chip">@Model.Precio.ToString("C")</span>
+                @if (Model.Stock.HasValue)
+                {
+                    <span class="badge rounded-pill bg-success-subtle text-success-emphasis border">
+                        Stock: @Model.Stock
+                    </span>
+                }
+            </div>
+        </div>
+
+        <!-- Meta / Detalles -->
+        <div class="col-12 col-md-7 p-3 p-md-4">
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="label">Descripción</div>
+                    <div class="value">@(!string.IsNullOrWhiteSpace(Model.Descripcion) ? Model.Descripcion : "—")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">Talla</div>
+                    <div class="value">@(!string.IsNullOrWhiteSpace(Model.Talla) ? Model.Talla : "—")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">Marca</div>
+                    <div class="value">@(!string.IsNullOrWhiteSpace(Model.Marca) ? Model.Marca : "—")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">Categoría</div>
+                    <div class="value">@((Model.CategoriaId?.ToString()) ?? "—")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">Distribuidor</div>
+                    <div class="value">@((Model.DistribuidorId?.ToString()) ?? "—")</div>
+                </div>
+            </div>
+
+            <!-- Acciones secundarias -->
+            <div class="detail-actions mt-4">
+                @if (esAdmin)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.ProductoId" class="btn btn-sm btn-outline-secondary btn-action">Editar</a>
+                }
+                <a asp-action="Index" class="btn btn-sm btn-outline-info btn-action">Volver</a>
+            </div>
+        </div>
+    </div>
+</div>

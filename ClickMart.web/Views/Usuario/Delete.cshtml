@@ -2,20 +2,47 @@
 @{
     ViewData["Title"] = "Eliminar usuario";
 }
-<h2>@ViewData["Title"]</h2>
-<div class="alert alert-warning">¿Seguro que deseas eliminar este usuario?</div>
-<dl class="row">
-    <dt class="col-sm-2">Id</dt>
-    <dd class="col-sm-10">@Model.UsuarioId</dd>
-    <dt class="col-sm-2">Nombre</dt>
-    <dd class="col-sm-10">@Model.Nombre</dd>
-    <dt class="col-sm-2">Email</dt>
-    <dd class="col-sm-10">@Model.Email</dd>
-    <dt class="col-sm-2">Rol</dt>
-    <dd class="col-sm-10">@Model.Rol</dd>
-</dl>
-<form asp-action="Delete" method="post">
-    <input type="hidden" name="id" value="@Model.UsuarioId" />
-    <button type="submit" class="btn btn-danger">Eliminar</button>
-    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-</form>
+
+<!-- HERO consistente -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Eliminar usuario</h1>
+        <p class="store-subtitle mb-0">Esta acción no se puede deshacer</p>
+    </div>
+    <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 p-3 p-md-4">
+    <div class="alert alert-warning mb-4">¿Seguro que deseas eliminar este usuario?</div>
+
+    <!-- Chips resumen (match productos/categoría) -->
+    <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+        <span class="chip-id">#@Model.UsuarioId</span>
+        <span class="badge rounded-pill bg-success-subtle text-success fw-semibold">@Model.Email</span>
+        <span class="badge rounded-pill bg-secondary-subtle text-secondary fw-semibold">@Model.Rol</span>
+    </div>
+
+    <!-- Grid de detalle (reuso de estilos categoría) -->
+    <div class="detail-grid-cat">
+        <div class="detail-item-cat">
+            <div class="label-cat">Nombre</div>
+            <div class="value-cat fw-medium">@Model.Nombre</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Email</div>
+            <div class="value-cat">@Model.Email</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Rol</div>
+            <div class="value-cat">@Model.Rol</div>
+        </div>
+    </div>
+
+    <form asp-action="Delete" method="post" class="mt-4">
+        <input type="hidden" name="id" value="@Model.UsuarioId" />
+        <div class="form-actions">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-action">Cancelar</a>
+            <button type="submit" class="btn btn-danger btn-action">Eliminar</button>
+        </div>
+    </form>
+</div>

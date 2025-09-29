@@ -2,11 +2,47 @@
 @{
     ViewData["Title"] = "Eliminar reseña";
 }
-<h2>@ViewData["Title"]</h2>
-<hr />
-<div class="alert alert-warning">¿Seguro que deseas eliminar esta reseña?</div>
-<form asp-action="Delete" method="post">
-    <input type="hidden" name="id" value="@Model.ResenaId" />
-    <button type="submit" class="btn btn-danger">Eliminar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-</form>
+
+<!-- HERO consistente -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Eliminar reseña</h1>
+        <p class="store-subtitle mb-0">Esta acción no se puede deshacer</p>
+    </div>
+    <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
+</div>
+
+<!-- Card -->
+<div class="card shadow-sm border-0 rounded-4 p-3 p-md-4">
+    <!-- ===== Tarjeta de mensaje (solo diseño, sin props opcionales) ===== -->
+    <div class="rounded-4 p-3 p-md-4 mb-4 d-flex align-items-start gap-3"
+         style="background:#fffaf0;border:1px solid #fde68a;box-shadow:0 10px 25px rgba(2,6,23,.05);">
+        <div class="d-flex align-items-center justify-content-center rounded-circle"
+             style="width:42px;height:42px;background:#fffbeb;border:1px solid #fde68a;flex:0 0 42px;">
+            <span class="fw-bold" style="color:#b45309;">!</span>
+        </div>
+
+        <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fw-semibold" style="letter-spacing:.02em;color:#7c3aed;">Confirmación requerida</span>
+                <span class="chip-id">#@Model.ResenaId</span>
+            </div>
+            <div class="text-muted">
+                ¿Seguro que deseas eliminar esta reseña? Esta operación es <strong>irreversible</strong>.
+            </div>
+        </div>
+    </div>
+    <!-- ===== /Tarjeta de mensaje ===== -->
+    <!-- Chip con ID para consistencia visual -->
+    <div class="mb-3">
+        <span class="chip-id">#@Model.ResenaId</span>
+    </div>
+
+    <form asp-action="Delete" method="post" class="mt-2">
+        <input type="hidden" name="id" value="@Model.ResenaId" />
+        <div class="form-actions">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-action">Cancelar</a>
+            <button type="submit" class="btn btn-danger btn-action">Eliminar</button>
+        </div>
+    </form>
+</div>

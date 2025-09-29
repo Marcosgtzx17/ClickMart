@@ -2,19 +2,43 @@
 @{
     ViewData["Title"] = "Detalle de usuario";
 }
-<h2>@ViewData["Title"]</h2>
-<dl class="row">
-    <dt class="col-sm-2">Id</dt>
-    <dd class="col-sm-10">@Model.UsuarioId</dd>
 
-    <dt class="col-sm-2">Nombre</dt>
-    <dd class="col-sm-10">@Model.Nombre</dd>
+<!-- HERO consistente -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">@Model?.Nombre</h1>
+        <p class="store-subtitle mb-0">Detalle de usuario</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-outline-secondary btn-lg">Editar</a>
+        <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
+    </div>
+</div>
 
-    <dt class="col-sm-2">Email</dt>
-    <dd class="col-sm-10">@Model.Email</dd>
+<div class="card shadow-sm border-0 rounded-4 p-3 p-md-4 category-card">
+    <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+        <span class="chip-id">#@Model.UsuarioId</span>
+        <span class="badge rounded-pill bg-secondary-subtle text-secondary fw-semibold">Rol: @Model.Rol</span>
+    </div>
 
-    <dt class="col-sm-2">Rol</dt>
-    <dd class="col-sm-10"><span class="badge text-bg-secondary">@Model.Rol</span></dd>
-</dl>
-<a asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-warning">Editar</a>
-<a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    <!-- Reuso de grid de detalle -->
+    <div class="detail-grid-cat">
+        <div class="detail-item-cat">
+            <div class="label-cat">Nombre</div>
+            <div class="value-cat fw-medium">@Model.Nombre</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Email</div>
+            <div class="value-cat">@Model.Email</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Rol</div>
+            <div class="value-cat">@Model.Rol</div>
+        </div>
+    </div>
+
+    <div class="detail-actions-cat mt-4">
+        <a asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-outline-secondary btn-action">Editar</a>
+        <a asp-action="Index" class="btn btn-primary btn-action">Volver</a>
+    </div>
+</div>

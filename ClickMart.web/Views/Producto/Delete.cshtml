@@ -2,20 +2,61 @@
 @{
     ViewData["Title"] = "Eliminar producto";
 }
-<h2>@ViewData["Title"]</h2>
-<div class="alert alert-warning">¿Seguro que deseas eliminar este producto?</div>
-<dl class="row">
-    <dt class="col-sm-2">Id</dt>
-    <dd class="col-sm-10">@Model.ProductoId</dd>
-    <dt class="col-sm-2">Nombre</dt>
-    <dd class="col-sm-10">@Model.Nombre</dd>
-    <dt class="col-sm-2">Precio</dt>
-    <dd class="col-sm-10">$ @Model.Precio</dd>
-    <dt class="col-sm-2">Marca</dt>
-    <dd class="col-sm-10">@Model.Marca</dd>
-</dl>
-<form asp-action="Delete" method="post">
+
+<!-- HERO consistente -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Eliminar producto</h1>
+        <p class="store-subtitle mb-0">Esta acción no se puede deshacer</p>
+    </div>
+    <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
+</div>
+
+<form asp-action="Delete" method="post"
+      class="card shadow-sm border-0 rounded-4 p-3 p-md-4 form-card">
     <input type="hidden" name="id" value="@Model.ProductoId" />
-    <button type="submit" class="btn btn-danger">Eliminar</button>
-    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+
+    <div class="alert alert-warning mb-3">
+        ¿Seguro que deseas eliminar este producto?
+    </div>
+
+    <!-- Chips resumen -->
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <span class="chip-id">#@Model.ProductoId</span>
+        <span class="price-chip">@Model.Precio.ToString("C")</span>
+        @if (Model.Stock.HasValue)
+        {
+            <span class="chip-stock">Stock: @Model.Stock</span>
+        }
+    </div>
+
+    <!-- Grilla de datos clave -->
+    <div class="detail-grid-cat mb-2">
+        <div class="detail-item-cat">
+            <div class="label-cat">Nombre</div>
+            <div class="value-cat fw-semibold">@Model.Nombre</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Marca</div>
+            <div class="value-cat">@(!string.IsNullOrWhiteSpace(Model.Marca) ? Model.Marca : "—")</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Talla</div>
+            <div class="value-cat">@(!string.IsNullOrWhiteSpace(Model.Talla) ? Model.Talla : "—")</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Categoría</div>
+            <div class="value-cat">@((Model.CategoriaId?.ToString()) ?? "—")</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Distribuidor</div>
+            <div class="value-cat">@((Model.DistribuidorId?.ToString()) ?? "—")</div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="form-actions mt-3">
+        <a asp-action="Index" class="btn btn-outline-secondary btn-action">Cancelar</a>
+        <button type="submit" class="btn btn-danger btn-action">Eliminar</button>
+    </div>
 </form>

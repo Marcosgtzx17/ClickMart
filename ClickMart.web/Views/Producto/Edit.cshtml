@@ -2,77 +2,91 @@
 @{
     ViewData["Title"] = "Editar producto";
 }
-<h2>@ViewData["Title"]</h2>
 
-<form asp-action="Edit" method="post" enctype="multipart/form-data" class="card shadow-sm p-3">
+<!-- HERO consistente -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Editar producto</h1>
+        <p class="store-subtitle mb-0">Actualiza la información del producto</p>
+    </div>
+    <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
+</div>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data"
+      class="card shadow-sm border-0 rounded-4 p-3 p-md-4 form-card">
     <input type="hidden" name="id" value="@ViewBag.Id" />
+
     <div class="row g-3">
-        <div class="col-md-6">
-            <label asp-for="Nombre" class="form-label"></label>
-            <input asp-for="Nombre" class="form-control" />
-            <span asp-validation-for="Nombre" class="text-danger"></span>
+        <div class="col-12 col-md-6">
+            <label asp-for="Nombre" class="form-label form-label-ux">Nombre</label>
+            <input asp-for="Nombre" class="form-control" placeholder="Ej. Camiseta básica" />
+            <span asp-validation-for="Nombre" class="invalid-feedback d-block"></span>
         </div>
 
-        <div class="col-md-6">
-            <label asp-for="Precio" class="form-label"></label>
-            <input asp-for="Precio" class="form-control" type="number" step="0.01" />
-            <span asp-validation-for="Precio" class="text-danger"></span>
+        <div class="col-12 col-md-6">
+            <label asp-for="Precio" class="form-label form-label-ux">Precio</label>
+            <input asp-for="Precio" class="form-control" type="number" step="0.01" placeholder="0.00" />
+            <span asp-validation-for="Precio" class="invalid-feedback d-block"></span>
         </div>
 
-        <div class="col-md-6">
-            <label asp-for="Marca" class="form-label"></label>
-            <input asp-for="Marca" class="form-control" />
-            <span asp-validation-for="Marca" class="text-danger"></span>
+        <div class="col-12 col-md-6">
+            <label asp-for="Marca" class="form-label form-label-ux">Marca</label>
+            <input asp-for="Marca" class="form-control" placeholder="Ej. ClickMart" />
+            <span asp-validation-for="Marca" class="invalid-feedback d-block"></span>
         </div>
 
-        <div class="col-md-6">
-            <label asp-for="Stock" class="form-label"></label>
-            <input asp-for="Stock" class="form-control" type="number" />
-            <span asp-validation-for="Stock" class="text-danger"></span>
+        <div class="col-12 col-md-6">
+            <label asp-for="Stock" class="form-label form-label-ux">Stock</label>
+            <input asp-for="Stock" class="form-control" type="number" min="0" />
+            <span asp-validation-for="Stock" class="invalid-feedback d-block"></span>
         </div>
 
-        <div class="col-md-6">
-            <label asp-for="Talla" class="form-label"></label>
-            <input asp-for="Talla" class="form-control" />
-            <span asp-validation-for="Talla" class="text-danger"></span>
+        <div class="col-12 col-md-6">
+            <label asp-for="Talla" class="form-label form-label-ux">Talla</label>
+            <input asp-for="Talla" class="form-control" placeholder="S / M / L / 42 / Única" />
+            <span asp-validation-for="Talla" class="invalid-feedback d-block"></span>
         </div>
 
-        <!-- 🔽 Cambiado: input -> select de Categoría -->
-        <div class="col-md-6">
-            <label asp-for="CategoriaId" class="form-label">Categoría</label>
+        <!-- Categoría -->
+        <div class="col-12 col-md-6">
+            <label asp-for="CategoriaId" class="form-label form-label-ux">Categoría</label>
             <select asp-for="CategoriaId" class="form-select" asp-items="ViewBag.Categorias">
                 <option value="">-- Seleccione --</option>
             </select>
-            <span asp-validation-for="CategoriaId" class="text-danger"></span>
+            <span asp-validation-for="CategoriaId" class="invalid-feedback d-block"></span>
         </div>
 
-        <!-- 🔽 Cambiado: input -> select de Distribuidor -->
-        <div class="col-md-6">
-            <label asp-for="DistribuidorId" class="form-label">Distribuidor</label>
+        <!-- Distribuidor -->
+        <div class="col-12 col-md-6">
+            <label asp-for="DistribuidorId" class="form-label form-label-ux">Distribuidor</label>
             <select asp-for="DistribuidorId" class="form-select" asp-items="ViewBag.Distribuidores">
                 <option value="">-- Seleccione --</option>
             </select>
-            <span asp-validation-for="DistribuidorId" class="text-danger"></span>
+            <span asp-validation-for="DistribuidorId" class="invalid-feedback d-block"></span>
         </div>
 
         <div class="col-12">
-            <label asp-for="Descripcion" class="form-label"></label>
-            <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
-            <span asp-validation-for="Descripcion" class="text-danger"></span>
+            <label asp-for="Descripcion" class="form-label form-label-ux">Descripción</label>
+            <textarea asp-for="Descripcion" class="form-control" rows="3"
+                      placeholder="Detalles del producto, materiales, uso, etc."></textarea>
+            <span asp-validation-for="Descripcion" class="invalid-feedback d-block"></span>
         </div>
 
         <div class="col-12">
-            <label class="form-label">Nueva imagen (opcional)</label>
+            <label class="form-label form-label-ux">Nueva imagen (opcional)</label>
             <input type="file" name="ImagenArchivo" accept=".png,.jpg,.jpeg,.gif,.webp" class="form-control" />
         </div>
     </div>
 
-    <div class="mt-3 d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Actualizar</button>
-        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    <div class="form-actions mt-4">
+        <button type="submit" class="btn btn-primary btn-action">Actualizar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-action">Volver</a>
     </div>
 
-    <div class="text-danger mt-2">@ViewBag.Error</div>
+    @if (!string.IsNullOrWhiteSpace((string?)ViewBag.Error))
+    {
+        <div class="alert alert-danger mt-3 mb-0">@ViewBag.Error</div>
+    }
 </form>
 
 @section Scripts {

@@ -80,6 +80,13 @@ else
                                     <a asp-action="Details" asp-route-id="@p.PedidoId" class="btn btn-outline-info">Ver</a>
                                     <a asp-action="Edit" asp-route-id="@p.PedidoId" class="btn btn-outline-secondary">Editar</a>
                                     <a asp-action="Delete" asp-route-id="@p.PedidoId" class="btn btn-outline-danger">Borrar</a>
+                                    <!-- NUEVO: Botón Factura en el listado -->
+                                    <a asp-action="Factura"
+                                       asp-route-id="@p.PedidoId"
+                                       class="btn btn-sm btn-outline-danger"
+                                       target="_blank" rel="noopener">
+                                        Factura
+                                    </a>
                                 </div>
                             </td>
                         </tr>
