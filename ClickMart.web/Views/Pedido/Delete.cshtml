@@ -3,33 +3,63 @@
     ViewData["Title"] = "Eliminar pedido";
 }
 
-<h2>Eliminar pedido #@Model.PedidoId</h2>
-<hr />
-
-<div class="alert alert-warning">
-    ¿Confirmas eliminar este pedido? Esta acción no se puede deshacer.
+<!-- HERO consistente -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Eliminar pedido</h1>
+        <p class="store-subtitle mb-0">Esta acción no se puede deshacer</p>
+    </div>
+    <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
 </div>
 
-<dl class="row">
-    <dt class="col-sm-3">Usuario</dt>
-    <dd class="col-sm-9">@Model.UsuarioId</dd>
+<!-- Card principal -->
+<div class="card shadow-sm border-0 rounded-4 p-3 p-md-4">
 
-    <dt class="col-sm-3">Total</dt>
-    <dd class="col-sm-9">@((Model.Total ?? 0m).ToString("C"))</dd>
-
-    <dt class="col-sm-3">Fecha</dt>
-    <dd class="col-sm-9">@Model.Fecha.ToString("yyyy-MM-dd")</dd>
-
-    <dt class="col-sm-3">Pago</dt>
-    <dd class="col-sm-9">@Model.PagoEstado</dd>
-</dl>
-
-<form asp-action="DeleteConfirmed" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="id" value="@Model.PedidoId" />
-
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-danger">Eliminar</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    <!-- Callout de confirmación (estilizado) -->
+    <div class="rounded-4 p-3 p-md-4 mb-4 d-flex align-items-start gap-3"
+         style="background:#fffaf0;border:1px solid #fde68a;box-shadow:0 10px 25px rgba(2,6,23,.05);">
+        <div class="d-flex align-items-center justify-content-center rounded-circle"
+             style="width:42px;height:42px;background:#fffbeb;border:1px solid #fde68a;flex:0 0 42px;">
+            <span class="fw-bold" style="color:#b45309;">!</span>
+        </div>
+        <div class="flex-grow-1">
+            <div class="fw-semibold mb-1" style="letter-spacing:.02em;color:#7c3aed;">Confirmación requerida</div>
+            <div class="text-muted">¿Confirmas eliminar este pedido? Esta operación es <strong>irreversible</strong>.</div>
+        </div>
     </div>
-</form>
+
+    <!-- Chip con ID para consistencia visual -->
+    <div class="mb-3">
+        <span class="chip-id">#@Model.PedidoId</span>
+    </div>
+
+    <!-- Resumen en grid (mismos estilos que categoría/producto) -->
+    <div class="detail-grid-cat">
+        <div class="detail-item-cat">
+            <div class="label-cat">Usuario</div>
+            <div class="value-cat fw-medium">@Model.UsuarioId</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Total</div>
+            <div class="value-cat">@((Model.Total ?? 0m).ToString("C"))</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Fecha</div>
+            <div class="value-cat">@Model.Fecha.ToString("yyyy-MM-dd")</div>
+        </div>
+        <div class="detail-item-cat">
+            <div class="label-cat">Pago</div>
+            <div class="value-cat">@Model.PagoEstado</div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <form asp-action="Delete" method="post" class="mt-4">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.PedidoId" />
+        <div class="form-actions">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-action">Cancelar</a>
+            <button type="submit" class="btn btn-danger btn-action">Eliminar</button>
+        </div>
+    </form>
+</div>

@@ -3,43 +3,55 @@
     ViewData["Title"] = "Editar pedido";
 }
 
-<h2>Editar pedido #@Model.PedidoId</h2>
-<hr />
+<!-- HERO -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Editar pedido #@Model.PedidoId</h1>
+        <p class="store-subtitle mb-0">Ajusta la información del pedido</p>
+    </div>
+    <a asp-action="Details" asp-route-id="@Model.PedidoId" class="btn btn-primary btn-lg">Volver al detalle</a>
+</div>
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" method="post" class="card shadow-sm border-0 rounded-4 p-3 p-md-4 form-card">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="PedidoId" />
 
-    <div class="mb-3">
-        <label asp-for="Fecha" class="form-label">Fecha</label>
-        <input asp-for="Fecha" type="date" class="form-control" />
-        <span asp-validation-for="Fecha" class="text-danger"></span>
+    <div class="row g-3">
+        <div class="col-12 col-md-6">
+            <label asp-for="Fecha" class="form-label form-label-ux">Fecha</label>
+            <input asp-for="Fecha" type="date" class="form-control" />
+            <span asp-validation-for="Fecha" class="invalid-feedback d-block"></span>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <label asp-for="MetodoPago" class="form-label form-label-ux">Método de pago</label>
+            <select asp-for="MetodoPago" class="form-select">
+                <option value="0">EFECTIVO</option>
+                <option value="1">TARJETA</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <label asp-for="PagoEstado" class="form-label form-label-ux">Estado de pago</label>
+            <select asp-for="PagoEstado" class="form-select">
+                <option value="0">PENDIENTE</option>
+                <option value="1">PAGADO</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <label asp-for="NumeroTarjeta" class="form-label form-label-ux">Número de tarjeta (si TARJETA)</label>
+            <input asp-for="NumeroTarjeta" class="form-control" />
+            <span asp-validation-for="NumeroTarjeta" class="invalid-feedback d-block"></span>
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="MetodoPago" class="form-label">Método de pago</label>
-        <select asp-for="MetodoPago" class="form-select">
-            <option value="0">EFECTIVO</option>
-            <option value="1">TARJETA</option>
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="PagoEstado" class="form-label">Estado de pago</label>
-        <select asp-for="PagoEstado" class="form-select">
-            <option value="0">PENDIENTE</option>
-            <option value="1">PAGADO</option>
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="NumeroTarjeta" class="form-label">Número de tarjeta (si TARJETA)</label>
-        <input asp-for="NumeroTarjeta" class="form-control" />
-        <span asp-validation-for="NumeroTarjeta" class="text-danger"></span>
-    </div>
-
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-warning">Guardar</button>
-        <a asp-action="Details" asp-route-id="@Model.PedidoId" class="btn btn-secondary">Cancelar</a>
+    <div class="form-actions mt-4">
+        <button type="submit" class="btn btn-warning btn-action">Guardar</button>
+        <a asp-action="Details" asp-route-id="@Model.PedidoId" class="btn btn-outline-secondary btn-action">Cancelar</a>
     </div>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

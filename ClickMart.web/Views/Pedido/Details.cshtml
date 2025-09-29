@@ -9,90 +9,55 @@
     var newDetalle = ViewBag.NewDetalle as DetallePedidoCreateDTO
                      ?? new DetallePedidoCreateDTO { IdPedido = Model.PedidoId, Cantidad = 1 };
 
-    // ¿Puede gestionar? (lo setea el controller: dueño = true, admin/otros = false)
     bool puedeGestionar = (bool)(ViewBag.PuedeGestionar ?? false);
 
-    // Fallback de total por si Model.Total no está actualizado aún.
     decimal totalCalculado = detalles.Any()
         ? detalles.Sum(x => (decimal?)x.Subtotal ?? 0m)
         : (Model.Total ?? 0m);
 }
 
-<!-- Avisos globales -->
-@if (TempData["Success"] is string okMsg)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @okMsg
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<!-- HERO -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Pedido #@Model.PedidoId</h1>
+        <p class="store-subtitle mb-0">Detalle y gestión de la orden</p>
     </div>
-}
-@if (TempData["Warn"] is string warnMsg)
-{
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        @warnMsg
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-@if (TempData["Error"] is string errMsg)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @errMsg
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Pedido #@Model.PedidoId</h2>
-
-    @if (puedeGestionar)
-    {
-        <div class="d-flex gap-2">
+    <div class="d-flex gap-2">
+        @if (puedeGestionar)
+        {
             <form asp-action="RecalcularTotal" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.PedidoId" />
-                <button type="submit" class="btn btn-outline-primary btn-sm">Recalcular total</button>
+                <button type="submit" class="btn btn-outline-primary btn-lg">Recalcular total</button>
             </form>
-            <a asp-action="Edit" asp-route-id="@Model.PedidoId" class="btn btn-warning btn-sm">Editar</a>
-            <a asp-action="Index" class="btn btn-secondary btn-sm">Volver</a>
-        </div>
-    }
-    else
-    {
-        <!-- Admin (u otro no dueño): solo volver -->
-        <a asp-action="Index" class="btn btn-secondary btn-sm">Volver</a>
-    }
-</div>
-
-<div class="card mb-3">
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <strong>Usuario:</strong><br /> @Model.UsuarioId
-            </div>
-            <div class="col-md-3">
-                <strong>Fecha:</strong><br /> @Model.Fecha.ToString("yyyy-MM-dd")
-            </div>
-            <div class="col-md-3">
-                <strong>Método:</strong><br /> @Model.MetodoPago
-            </div>
-            <div class="col-md-3">
-                <strong>Pago:</strong><br /> @Model.PagoEstado
-            </div>
-            <div class="col-md-3">
-                <strong>Tarjeta (últimos 4):</strong><br /> @(Model.TarjetaUltimos4 ?? "-")
-            </div>
-            <div class="col-md-3">
-                <strong>Total:</strong><br /> @totalCalculado.ToString("C")
-            </div>
-        </div>
+            <a asp-action="Edit" asp-route-id="@Model.PedidoId" class="btn btn-warning btn-lg">Editar</a>
+        }
+        <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
     </div>
 </div>
 
-<!-- ===== Detalles ===== -->
+<!-- Card resumen -->
+<div class="card shadow-sm border-0 rounded-4 p-3 p-md-4 mb-3">
+    <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+        <span class="chip-id">#@Model.PedidoId</span>
+        <span class="badge rounded-pill bg-secondary-subtle text-secondary fw-semibold">Pago: @Model.PagoEstado</span>
+    </div>
+
+    <div class="detail-grid-cat">
+        <div class="detail-item-cat"><div class="label-cat">Usuario</div><div class="value-cat fw-medium">@Model.UsuarioId</div></div>
+        <div class="detail-item-cat"><div class="label-cat">Fecha</div><div class="value-cat">@Model.Fecha.ToString("yyyy-MM-dd")</div></div>
+        <div class="detail-item-cat"><div class="label-cat">Método</div><div class="value-cat">@Model.MetodoPago</div></div>
+        <div class="detail-item-cat"><div class="label-cat">Tarjeta (últimos 4)</div><div class="value-cat">@((Model.TarjetaUltimos4 ?? "-"))</div></div>
+        <div class="detail-item-cat"><div class="label-cat">Total</div><div class="value-cat fw-medium">@totalCalculado.ToString("C")</div></div>
+    </div>
+</div>
+
 <div class="row">
+    <!-- Detalles -->
     <div class="col-lg-8">
-        <div class="card mb-3">
-            <div class="card-header fw-bold">Detalles</div>
+        <div class="card shadow-sm border-0 rounded-4 mb-3">
+            <div class="card-header bg-white fw-bold">Detalles</div>
             <div class="card-body p-0">
                 @if (!detalles.Any())
                 {
@@ -100,88 +65,90 @@
                 }
                 else
                 {
-                    <table class="table table-hover mb-0 align-middle">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Producto</th>
-                                <th>Cantidad</th>
-                                <th>Precio</th>
-                                <th>Subtotal</th>
-                                @if (puedeGestionar)
-                                {
-                                    <th style="width: 160px"></th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var d in detalles)
-                            {
-                                var precio = (decimal?)d.PrecioUnitario ?? 0m;
-                                var subtotal = (decimal?)d.Subtotal ?? (precio * d.Cantidad);
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
                                 <tr>
-                                    <td>@d.DetalleId</td>
-                                    <td>@(d.ProductoNombre ?? $"ID {d.IdProducto}")</td>
-                                    <td>@d.Cantidad</td>
-                                    <td>@precio.ToString("C")</td>
-                                    <td>@subtotal.ToString("C")</td>
-
+                                    <th>#</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio</th>
+                                    <th>Subtotal</th>
                                     @if (puedeGestionar)
                                     {
-                                        <td class="text-end">
-                                            <form asp-action="UpdateDetalle" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
-                                                <input type="hidden" name="DetalleId" value="@d.DetalleId" />
-                                                <input type="number" name="Cantidad" value="@d.Cantidad" min="1"
-                                                       class="form-control form-control-sm d-inline-block me-1"
-                                                       style="width: 80px" />
-                                                <button class="btn btn-sm btn-warning">Actualizar</button>
-                                            </form>
-
-                                            <form asp-action="DeleteDetalle" method="post" class="d-inline ms-1">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
-                                                <input type="hidden" name="id" value="@d.DetalleId" />
-                                                <button class="btn btn-sm btn-danger"
-                                                        onclick="return confirm('¿Eliminar detalle?')">
-                                                    Borrar
-                                                </button>
-                                            </form>
-                                        </td>
+                                        <th style="width: 220px" class="text-end">Acciones</th>
                                     }
                                 </tr>
-                            }
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th colspan="4" class="text-end">Total</th>
-                                <th>@totalCalculado.ToString("C")</th>
-                                @if (puedeGestionar)
+                            </thead>
+                            <tbody>
+                                @foreach (var d in detalles)
                                 {
-                                    <th></th>
+                                    var precio = (decimal?)d.PrecioUnitario ?? 0m;
+                                    var subtotal = (decimal?)d.Subtotal ?? (precio * d.Cantidad);
+                                    <tr>
+                                        <td>@d.DetalleId</td>
+                                        <td>@(d.ProductoNombre ?? $"ID {d.IdProducto}")</td>
+                                        <td>@d.Cantidad</td>
+                                        <td>@precio.ToString("C")</td>
+                                        <td>@subtotal.ToString("C")</td>
+
+                                        @if (puedeGestionar)
+                                        {
+                                            <td class="text-end">
+                                                <form asp-action="UpdateDetalle" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                                                    <input type="hidden" name="DetalleId" value="@d.DetalleId" />
+                                                    <input type="number" name="Cantidad" value="@d.Cantidad" min="1"
+                                                           class="form-control form-control-sm d-inline-block me-1"
+                                                           style="width: 90px" />
+                                                    <button class="btn btn-sm btn-warning">Actualizar</button>
+                                                </form>
+
+                                                <form asp-action="DeleteDetalle" method="post" class="d-inline ms-1">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                                                    <input type="hidden" name="id" value="@d.DetalleId" />
+                                                    <button class="btn btn-sm btn-danger"
+                                                            onclick="return confirm('¿Eliminar detalle?')">
+                                                        Borrar
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        }
+                                    </tr>
                                 }
-                            </tr>
-                        </tfoot>
-                    </table>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="4" class="text-end">Total</th>
+                                    <th>@totalCalculado.ToString("C")</th>
+                                    @if (puedeGestionar)
+                                    {
+                                        <th></th>
+                                    }
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 }
             </div>
         </div>
     </div>
 
-    <!-- Agregar detalle (SOLO dueño) -->
+    <!-- Agregar detalle (solo dueño) -->
     <div class="col-lg-4">
         @if (puedeGestionar)
         {
-            <div class="card mb-3">
-                <div class="card-header fw-bold">Agregar detalle</div>
+            <div class="card shadow-sm border-0 rounded-4 mb-3">
+                <div class="card-header bg-white fw-bold">Agregar detalle</div>
                 <div class="card-body">
                     <form asp-action="AddDetalle" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="IdPedido" value="@newDetalle.IdPedido" />
 
                         <div class="mb-3">
-                            <label class="form-label">Producto</label>
+                            <label class="form-label form-label-ux">Producto</label>
                             <select name="IdProducto" class="form-select" required>
                                 <option value="">-- Selecciona --</option>
                                 @foreach (var p in productos)
@@ -192,9 +159,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Cantidad</label>
-                            <input type="number" name="Cantidad" class="form-control"
-                                   value="@newDetalle.Cantidad" min="1" required />
+                            <label class="form-label form-label-ux">Cantidad</label>
+                            <input type="number" name="Cantidad" class="form-control" value="@newDetalle.Cantidad" min="1" required />
                         </div>
 
                         <div class="d-grid">
@@ -204,9 +170,9 @@
                 </div>
             </div>
 
-            <!-- Pago (SOLO dueño) -->
-            <div class="card">
-                <div class="card-header fw-bold">Pago</div>
+            <!-- Pago -->
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white fw-bold">Pago</div>
                 <div class="card-body">
                     <form asp-action="GenerarCodigo" method="post" class="mb-2">
                         @Html.AntiForgeryToken()
@@ -224,10 +190,6 @@
                     </form>
                 </div>
             </div>
-        }
-        else
-        {
-            <!-- Si no puede gestionar (p.ej. Administrador), no mostramos estas tarjetas -->
         }
     </div>
 </div>

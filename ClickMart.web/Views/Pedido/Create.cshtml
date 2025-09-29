@@ -4,59 +4,67 @@
     var esAdmin = (bool)(ViewBag.EsAdmin ?? false);
 }
 
-<h2>Nuevo pedido</h2>
-<hr />
+<!-- HERO -->
+<div class="store-hero mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="store-title mb-1">Nuevo pedido</h1>
+        <p class="store-subtitle mb-0">Genera una orden con compliance de pago incluido</p>
+    </div>
+    <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
+</div>
 
-<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div asp-validation-summary="ModelOnly" class="invalid-feedback d-block mb-3"></div>
 
-<form asp-action="Create" method="post" id="formPedido">
+<form asp-action="Create" method="post" id="formPedido" class="card shadow-sm border-0 rounded-4 p-3 p-md-4 form-card">
     @Html.AntiForgeryToken()
 
-    @if (esAdmin)
-    {
-        <div class="mb-3">
-            <label class="form-label">Usuario</label>
-            <select asp-for="Pedido.UsuarioId" asp-items="Model.Usuarios" class="form-select">
-                <option value="">-- seleccione --</option>
-            </select>
-            <span asp-validation-for="Pedido.UsuarioId" class="text-danger"></span>
-        </div>
-    }
-
-    <div class="mb-3">
-        <label class="form-label">Fecha</label>
-        <input asp-for="Pedido.Fecha" class="form-control" type="date" />
-        <span asp-validation-for="Pedido.Fecha" class="text-danger"></span>
-    </div>
-
     <div class="row g-3">
-        <div class="col-md-6">
-            <label class="form-label">Método de pago</label>
+        @if (esAdmin)
+        {
+            <div class="col-12 col-md-6">
+                <label class="form-label form-label-ux">Usuario</label>
+                <select asp-for="Pedido.UsuarioId" asp-items="Model.Usuarios" class="form-select">
+                    <option value="">-- seleccione --</option>
+                </select>
+                <span asp-validation-for="Pedido.UsuarioId" class="invalid-feedback d-block"></span>
+            </div>
+        }
+
+        <div class="col-12 col-md-6">
+            <label class="form-label form-label-ux">Fecha</label>
+            <input asp-for="Pedido.Fecha" class="form-control" type="date" />
+            <span asp-validation-for="Pedido.Fecha" class="invalid-feedback d-block"></span>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <label class="form-label form-label-ux">Método de pago</label>
             <select asp-for="Pedido.MetodoPago" class="form-select" id="metodoPago">
                 <option value="0">EFECTIVO</option>
                 <option value="1">TARJETA</option>
             </select>
-            <small class="form-text text-muted">Si eliges TARJETA, deberás ingresar el número.</small>
+            <small class="text-muted">Si eliges TARJETA, deberás ingresar el número.</small>
         </div>
 
-        <div class="col-md-6">
-            <label class="form-label">Estado de pago</label>
+        <div class="col-12 col-md-6">
+            <label class="form-label form-label-ux">Estado de pago</label>
             <select class="form-select" disabled>
                 <option selected>PENDIENTE</option>
             </select>
             <input type="hidden" asp-for="Pedido.PagoEstado" />
         </div>
+
+        <div class="col-12" id="grpTarjeta" style="display:none">
+            <label class="form-label form-label-ux">Número de tarjeta (si TARJETA)</label>
+            <input asp-for="Pedido.NumeroTarjeta" class="form-control" id="numeroTarjeta" inputmode="numeric" />
+            <small class="text-muted d-block">Se validará con Luhn en la API y sólo se guardan los últimos 4.</small>
+            <span asp-validation-for="Pedido.NumeroTarjeta" class="invalid-feedback d-block"></span>
+        </div>
     </div>
 
-    <div class="mb-3 mt-3" id="grpTarjeta" style="display:none">
-        <label class="form-label">Número de tarjeta (si TARJETA)</label>
-        <input asp-for="Pedido.NumeroTarjeta" class="form-control" id="numeroTarjeta" inputmode="numeric" />
-        <small class="text-muted d-block">Se validará con Luhn en la API y sólo se guardan los últimos 4.</small>
-        <span asp-validation-for="Pedido.NumeroTarjeta" class="text-danger"></span>
+    <div class="form-actions mt-4">
+        <button type="submit" class="btn btn-primary btn-action" id="btnCrear">Crear</button>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-action">Volver</a>
     </div>
-
-    <button type="submit" class="btn btn-primary" id="btnCrear">Crear</button>
-    <a asp-action="Index" class="btn btn-secondary">Volver</a>
 </form>
 
 @section Scripts {
