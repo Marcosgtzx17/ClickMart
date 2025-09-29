@@ -5,27 +5,32 @@
     var ratings = ViewBag.Ratings as Dictionary<int, double> ?? new();
     var apiBase = (Config["ApiBaseUrl"] ?? "").TrimEnd('/'); // ej: https://localhost:7069/api
 
+    // === Flags de rol ===
+    var esCliente = User.IsInRole("Cliente");
+    var esAdmin = User.IsInRole("Admin") || User.IsInRole("Administrador");
+
     Func<int, string> GetImgSrc = (int id) =>
     {
-        // Si tienes un endpoint en tu API para la imagen:
         return $"{apiBase}/producto/{id}/imagen";
-
-        // Alternativa si servirás desde wwwroot/uploads (descomenta):
+        // Alternativa wwwroot:
         // return Url.Content($"~/uploads/productos/{id}.jpg");
     };
 }
 
 <div class="theme theme-royal">
-    <!-- Cambia a theme-ocean/forest si quieres -->
     <!-- HERO -->
     <section class="store-hero mb-4">
         <div>
             <h1 class="store-title">Productos</h1>
             <p class="store-subtitle">Catálogo de productos ClickMart</p>
         </div>
-        <div class="hero-actions">
-            <a asp-action="Create" class="btn btn-primary btn-lg">Nuevo producto</a>
-        </div>
+
+        @if (esAdmin)   // <--- solo admins ven "Nuevo producto"
+        {
+            <div class="hero-actions">
+                <a asp-action="Create" class="btn btn-primary btn-lg">Nuevo producto</a>
+            </div>
+        }
     </section>
 
     @if (TempData["Ok"] != null)
@@ -50,22 +55,18 @@
                 <article class="p-card @(p.TieneImagen ? "has-img" : "")">
                     <span class="idx-chip">#@i</span>
 
-                    <!-- Tapa gris + bloque principal (sin imagen o con imagen si existe) -->
+                    <!-- Tapa gris / imagen -->
                     <div class="p-card-hero">
                         @if (p.TieneImagen)
                         {
                             <img src="@GetImgSrc(p.ProductoId)" alt="Imagen de @p.Nombre" loading="lazy" />
                         }
-                        else
-                        {
-                            @* sin imagen: queda limpio como en tu screenshot *@
-                        }
                     </div>
 
-                    <!-- Franja turquesa -->
+                    <!-- Franja -->
                     <div class="p-divider"></div>
 
-                    <!-- Nombre y precio (chip) -->
+                    <!-- Nombre y precio -->
                     <div class="p-name-price">
                         <a class="p-link" asp-action="Details" asp-route-id="@p.ProductoId">@p.Nombre</a>
                         <span class="price-chip">@p.Precio.ToString("C")</span>
@@ -82,12 +83,37 @@
                         <span class="rating-text">@avg.ToString("0.0") / 5</span>
                     </div>
 
-                    <!-- Acciones (2x2) -->
+                    <!-- Acciones -->
                     <div class="p-actions">
-                        <a asp-action="Details" asp-route-id="@p.ProductoId" class="btn btn-soft">Ver</a>
-                        <a asp-action="Edit" asp-route-id="@p.ProductoId" class="btn btn-soft">Editar</a>
-                        <a asp-controller="Resena" asp-action="Create" asp-route-productoId="@p.ProductoId" class="btn btn-soft btn-soft-primary">Reseñar</a>
-                        <a asp-action="Delete" asp-route-id="@p.ProductoId" class="btn btn-soft btn-soft-danger">Eliminar</a>
+                        @if (esCliente)
+                        {
+                            <!-- Cliente: SOLO Reseñar + Pedir -->
+                            <a asp-controller="Resena"
+                               asp-action="Create"
+                               asp-route-productoId="@p.ProductoId"
+                               class="btn btn-soft btn-soft-primary">Reseñar</a>
+
+                            <a asp-controller="Pedido"
+                               asp-action="Create"
+                               asp-route-productoId="@p.ProductoId"
+                               class="btn btn-pedir">Pedir</a>
+                        }
+                        else
+                        {
+                            <!-- Admin/otros: panel completo -->
+                            <a asp-action="Details" asp-route-id="@p.ProductoId" class="btn btn-soft">Ver</a>
+                            <a asp-action="Edit" asp-route-id="@p.ProductoId" class="btn btn-soft">Editar</a>
+                            <a asp-controller="Resena"
+                               asp-action="Create"
+                               asp-route-productoId="@p.ProductoId"
+                               class="btn btn-soft btn-soft-primary">Reseñar</a>
+                            <a asp-action="Delete" asp-route-id="@p.ProductoId" class="btn btn-soft btn-soft-danger">Eliminar</a>
+
+                            <a asp-controller="Pedido"
+                               asp-action="Create"
+                               asp-route-productoId="@p.ProductoId"
+                               class="btn btn-pedir">Pedir</a>
+                        }
                     </div>
                 </article>
 
