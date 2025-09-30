@@ -75,5 +75,9 @@ namespace ClickMart.Repositorios
             _ctx.DetallePedidos.Remove(e);
             return await _ctx.SaveChangesAsync() > 0;
         }
+        public Task<int> CountByProductoAsync(int productoId)
+          => _ctx.Set<DetallePedido>()
+                 .AsNoTracking()
+                 .CountAsync(d => d.IdProducto == productoId);
     }
 }

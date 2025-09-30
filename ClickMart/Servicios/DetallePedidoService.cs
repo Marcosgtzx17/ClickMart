@@ -87,5 +87,8 @@ namespace ClickMart.Servicios
             PrecioUnitario = e.Producto?.Precio ?? 0m,
             Subtotal = (e.Producto?.Precio ?? 0m) * e.Cantidad
         };
+        public Task<int> CountByProductoAsync(int productoId)
+          => _repo.CountByProductoAsync(productoId);
     }
 }
+

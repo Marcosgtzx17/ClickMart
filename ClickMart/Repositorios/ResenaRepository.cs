@@ -51,5 +51,10 @@ namespace ClickMart.Repositorios
                        .AsNoTracking()
                        .CountAsync(r => r.UsuarioId == usuarioId);
         }
+        public Task<int> CountByProductoAsync(int productoId)
+          => _ctx.Set<Resena>()
+                 .AsNoTracking()
+                 .CountAsync(r => r.ProductoId == productoId);
     }
 }
+

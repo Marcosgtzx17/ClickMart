@@ -65,6 +65,8 @@ namespace ClickMart.Servicios
         };
         public Task<int> CountByUsuarioAsync(int usuarioId)
             => _repo.CountByUsuarioAsync(usuarioId);
+        public Task<int> CountByProductoAsync(int productoId)
+        => _repo.CountByProductoAsync(productoId);
     }
 }
 

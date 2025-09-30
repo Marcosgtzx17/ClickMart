@@ -75,11 +75,49 @@ namespace ClickMart.Api.Controllers
         // DELETE /api/producto/{id}
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Admin,Administrador,adminitrador,administradores")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id,
+            [FromServices] IDetallePedidoService detalleSvc,
+            [FromServices] IResenaService? resenaSvc = null)
         {
-            var ok = await _svc.DeleteAsync(id);
-            return ok ? NoContent() : NotFound();
+            // (1) Pre-chequeo: ¿está referenciado?
+            var usadosEnDetalles = await detalleSvc.CountByProductoAsync(id);
+            var usadosEnResenas = resenaSvc is null ? 0 : await resenaSvc.CountByProductoAsync(id);
+
+            if ((usadosEnDetalles + usadosEnResenas) > 0)
+            {
+                return Conflict(new
+                {
+                    message = "No se puede eliminar el producto porque está en uso.",
+                    detalles = new
+                    {
+                        pedidos = usadosEnDetalles,
+                        resenas = usadosEnResenas
+                    },
+                    sugerencia = "Elimina o reasigna las referencias antes de eliminar el producto."
+                });
+            }
+
+            // (2) Borrado con fallback por si alguna FK oculta revienta
+            try
+            {
+                var ok = await _svc.DeleteAsync(id);
+                return ok ? NoContent() : NotFound();
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbex)
+            {
+                return Conflict(new
+                {
+                    message = "No se puede eliminar el producto debido a referencias existentes.",
+                    detalles = new
+                    {
+                        pedidos = usadosEnDetalles,
+                        resenas = usadosEnResenas
+                    },
+                    error = dbex.InnerException?.Message ?? dbex.Message
+                });
+            }
         }
+
 
         // POST /api/producto/{id}/imagen  (multipart/form-data; field: Archivo)
         [HttpPost("{id:int}/imagen")]

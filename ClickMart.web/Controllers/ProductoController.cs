@@ -189,12 +189,46 @@ namespace ClickMart.web.Controllers
                 if (!ok) TempData["Error"] = "No se pudo eliminar el producto.";
                 return RedirectToAction(nameof(Index));
             }
+            catch (ApiHttpException ex) when ((int)ex.StatusCode == 409) // Conflict
+            {
+                // Intentamos rearmar la vista Delete con el modelo y la alerta amigable
+                var model = await _svc.GetByIdAsync(id, token);
+                if (model is null)
+                {
+                    TempData["Error"] = ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
+
+                try
+                {
+                    
+                    ViewBag.BlockInfo = new
+                    {
+                        Message = ex.Message,
+                        Pedidos = (int?)null, // si no parseas el body, deja null y solo mostramos el texto
+                        Resenas = (int?)null
+                    };
+                }
+                catch
+                {
+                    ViewBag.BlockInfo = new { Message = ex.Message, Pedidos = (int?)null, Resenas = (int?)null };
+                }
+
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View("Delete", model);
+            }
+            catch (ApiHttpException ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
             catch (Exception ex)
             {
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }
+
 
         // ---------- Helpers ----------
         private async Task CargarCombosAsync(string? token)

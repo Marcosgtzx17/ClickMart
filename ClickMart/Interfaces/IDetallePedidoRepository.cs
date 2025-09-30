@@ -12,6 +12,6 @@ namespace ClickMart.Interfaces
         Task<bool> UpdateAsync(DetallePedido entity);
         Task<bool> DeleteAsync(int id);
 
-
+        Task<int> CountByProductoAsync(int productoId);
     }
 }
