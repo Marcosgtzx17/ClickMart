@@ -1,14 +1,172 @@
 ﻿@{
     ViewData["Title"] = "Home";
+    var isAuth = User?.Identity?.IsAuthenticated == true;
+    var esAdmin = User.IsInRole("Administrador") || User.IsInRole("Admin");
 }
-<div class="text-center">
-    <h1 class="display-5">Bienvenido a ClickMart</h1>
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <p class="lead">Estás autenticado.</p>
-    }
-    else
-    {
-        <p class="lead">Por favor <a asp-controller="Auth" asp-action="Login">inicia sesión</a> o <a asp-controller="Auth" asp-action="Registrar">regístrate</a>.</p>
-    }
-</div>
+
+@section PageHeader {
+    <style>
+        /* Estilos locales de la Home */
+        .home-hero {
+            background: radial-gradient(1200px 500px at 0% -20%, rgba(106,56,255,.20), transparent 60%), radial-gradient(800px 400px at 100% -20%, rgba(255,79,216,.18), transparent 55%);
+        }
+
+        .brand-logo {
+            height: 52px;
+            width: auto;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,.12));
+        }
+
+        .feature-card {
+            border: 1px solid rgba(2,6,23,.06);
+            border-radius: 16px;
+            transition: transform .2s, box-shadow .2s, border-color .2s;
+        }
+
+            .feature-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 12px 30px rgba(2,6,23,.12);
+                border-color: rgba(2,6,23,.12);
+            }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg,#6a38ff,#ff4fd8);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .muted {
+            color: #64748b;
+        }
+    </style>
+
+    <div class="home-hero py-4 py-md-5 mb-4">
+        <div class="container-xxl">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-7">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <h1 class="h2 mb-0">Bienvenido a <span class="fw-semibold">ClickMart</span></h1>
+                    </div>
+
+                    @if (isAuth)
+                    {
+                        <p class="lead text-secondary mb-4">
+                            Tu sesión está activa. Listo para orquestar valor de punta a punta. 🚀
+                        </p>
+                        <div class="d-flex gap-2 flex-wrap mb-3">
+                            <a asp-controller="Pedido" asp-action="Index" class="btn btn-dark">Ir a Pedidos</a>
+                            <a asp-controller="Producto" asp-action="Index" class="btn btn-outline-dark">Explorar Productos</a>
+                            <a asp-controller="Resena" asp-action="Index" class="btn btn-outline-dark">Ver Reseñas</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="lead text-secondary mb-4">
+                            Por favor <a asp-controller="Auth" asp-action="Login">inicia sesión</a> o
+                            <a asp-controller="Auth" asp-action="Registrar">regístrate</a> para empezar.
+                        </p>
+                        <div class="d-flex gap-2 flex-wrap mb-3">
+                            <a asp-controller="Auth" asp-action="Login" class="btn btn-dark">Iniciar sesión</a>
+                            <a asp-controller="Auth" asp-action="Registrar" class="btn btn-outline-dark">Crear cuenta</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* === Accesos rápidos SOLO si hay sesión === *@
+@if (isAuth)
+{
+    <div class="text-center">
+        <h2 class="h4 mb-4">Accesos rápidos</h2>
+
+        <div class="row g-3 g-md-4 justify-content-center">
+            <!-- Productos -->
+            <div class="col-12 col-sm-6 col-lg-4">
+                <a asp-controller="Producto" asp-action="Index" class="text-decoration-none text-reset">
+                    <div class="feature-card p-4 h-100">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <span class="feature-icon">P</span>
+                            <h5 class="mb-0">Productos</h5>
+                        </div>
+                        <p class="mb-0 muted">Explora el catálogo y maximiza la conversión.</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Reseñas -->
+            <div class="col-12 col-sm-6 col-lg-4">
+                <a asp-controller="Resena" asp-action="Index" class="text-decoration-none text-reset">
+                    <div class="feature-card p-4 h-100">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <span class="feature-icon">R</span>
+                            <h5 class="mb-0">Reseñas</h5>
+                        </div>
+                        <p class="mb-0 muted">Escucha al usuario, itera y escala.</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Pedidos -->
+            <div class="col-12 col-sm-6 col-lg-4">
+                <a asp-controller="Pedido" asp-action="Index" class="text-decoration-none text-reset">
+                    <div class="feature-card p-4 h-100">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <span class="feature-icon">Pe</span>
+                            <h5 class="mb-0">Pedidos</h5>
+                        </div>
+                        <p class="mb-0 muted">Gestiona órdenes end-to-end sin fricción.</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Solo ADMIN -->
+            @if (esAdmin)
+            {
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <a asp-controller="Usuario" asp-action="Index" class="text-decoration-none text-reset">
+                        <div class="feature-card p-4 h-100">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <span class="feature-icon">U</span>
+                                <h5 class="mb-0">Usuarios</h5>
+                            </div>
+                            <p class="mb-0 muted">Onboardings, permisos y gobierno de acceso.</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <a asp-controller="Categoria" asp-action="Index" class="text-decoration-none text-reset">
+                        <div class="feature-card p-4 h-100">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <span class="feature-icon">C</span>
+                                <h5 class="mb-0">Categorías</h5>
+                            </div>
+                            <p class="mb-0 muted">Arquitectura del catálogo, sin deuda técnica.</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <a asp-controller="Distribuidor" asp-action="Index" class="text-decoration-none text-reset">
+                        <div class="feature-card p-4 h-100">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <span class="feature-icon">D</span>
+                                <h5 class="mb-0">Distribuidores</h5>
+                            </div>
+                            <p class="mb-0 muted">Gestión de partners para cobertura 360°.</p>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+}

@@ -39,13 +39,14 @@ namespace ClickMart.Entidades
 
         // ======= Relaciones =======
 
-        [Column("ID_CATEGORIA")]
+        [Column("CATEGORIA_ID")]
         public int? CategoriaId { get; set; }
+
 
         [ForeignKey("CategoriaId")]
         public CategoriaProducto? Categoria { get; set; }
 
-        [Column("ID_DISTRIBUIDOR")]
+        [Column("DISTRIBUIDOR_ID")]
         public int? DistribuidorId { get; set; }
 
         [ForeignKey("DistribuidorId")]

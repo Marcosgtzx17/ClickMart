@@ -1,83 +1,231 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@*
+    _Layout.cshtml — ClickMart
+    - Logo junto a la marca (~/img/clickmart-logo.png)
+    - Navbar con gradiente y “glass card” en el body
+    - Visibilidad por rol:
+        * SIN sesión: solo Home + botón Iniciar sesión.
+        * Cliente (sesión): Catálogo (Productos), Reseñas, Pedidos.
+        * Admin/Administrador: además Usuarios, Categorías, Distribuidores.
+*@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ClickMart.web</title>
+    <title>@ViewData["Title"] - ClickMart</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ClickMart.web.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/stars.css" />
     <script src="~/js/stars.js"></script>
+
+    <style>
+        :root {
+            --brand-start: #6a38ff;
+            --brand-end: #ff4fd8;
+            --ink-900: #0f172a;
+            --ink-700: #334155;
+            --surface: 255,255,255;
+            --glass-bg: rgba(var(--surface),0.72);
+            --glass-brd: rgba(255,255,255,0.30);
+            --shadow-soft: 0 12px 40px rgba(2,6,23,0.18);
+        }
+
+        .app-body {
+            background: radial-gradient(1200px 600px at -10% -10%, rgba(106,56,255,0.12), transparent 60%), radial-gradient(900px 500px at 110% -10%, rgba(255,79,216,0.10), transparent 55%), linear-gradient(180deg,#f8fafc,#eef2ff 18%,#ffffff 50%,#f8fafc 100%);
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bg-nav {
+            background: linear-gradient(90deg,var(--brand-start),var(--brand-end));
+        }
+
+        .text-brand-em {
+            opacity: .9;
+        }
+
+        .nav-link-soft {
+            color: rgba(255,255,255,.85) !important;
+            transition: all .2s ease;
+        }
+
+            .nav-link-soft:hover {
+                transform: translateY(-1px);
+            }
+
+        .navbar .dropdown-menu {
+            border: 0;
+            border-radius: 14px;
+            padding: .5rem;
+            min-width: 220px;
+        }
+
+        .navbar .dropdown-item:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Brand */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .brand-logo-img {
+            height: 28px;
+            width: auto;
+            display: block;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,.15));
+        }
+
+        .navbar-brand span {
+            line-height: 1;
+        }
+
+        .app-hero {
+            height: 36px;
+            background: linear-gradient(180deg,rgba(106,56,255,0.15),rgba(255,79,216,0.08),transparent);
+        }
+
+        .glass-card {
+            border-radius: 18px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-brd);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .app-footer {
+            background: linear-gradient(180deg,rgba(15,23,42,.02),rgba(15,23,42,.06));
+        }
+
+        .btn-brand {
+            background: #fff;
+            color: #4b2fff;
+            border: 0;
+            box-shadow: 0 6px 16px rgba(0,0,0,.12);
+        }
+
+            .btn-brand:hover {
+                filter: brightness(.98);
+                transform: translateY(-1px);
+            }
+    </style>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ClickMart.web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+
+<body class="app-body">
+    <header class="app-header sticky-top shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-nav">
+            <div class="container-xxl">
+                <!-- Brand con LOGO -->
+                <a class="navbar-brand fw-semibold d-flex align-items-center gap-2 py-0"
+                   asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/img/clickmart-logo.png" asp-append-version="true"
+                         alt="ClickMart" class="brand-logo-img" />
+                    <span>ClickMart</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                        aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="mainNav">
+                    @{
+                        var isAuth = User?.Identity?.IsAuthenticated == true;
+                        var esAdmin = User.IsInRole("Administrador") || User.IsInRole("Admin");
+                    }
+
+                    <ul class="navbar-nav me-auto align-items-lg-center">
+                        <!-- Siempre visible -->
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link nav-link-soft" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Producto" asp-action="Index">Productos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Categoria" asp-action="Index">Categorías</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Usuario" asp-action="Index">Usuarios</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Resena" asp-action="Index">Reseñas</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Pedido" asp-action="Index">Pedidos</a>
-                        </li>
+
+                        @* El resto SOLO si hay sesión *@
+                        @if (isAuth)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-soft" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            </li>
+
+                            <!-- Catálogo -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle nav-link-soft" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Catálogo
+                                </a>
+                                <ul class="dropdown-menu shadow-sm">
+                                    <li><a class="dropdown-item" asp-controller="Producto" asp-action="Index">Productos</a></li>
+                                    @if (esAdmin)
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Categoria" asp-action="Index">Categorías</a></li>
+                                    }
+                                </ul>
+                            </li>
+
+                            <!-- Reseñas -->
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-soft" asp-controller="Resena" asp-action="Index">Reseñas</a>
+                            </li>
+
+                            <!-- Pedidos -->
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-soft" asp-controller="Pedido" asp-action="Index">Pedidos</a>
+                            </li>
+
+                            <!-- Solo ADMIN -->
+                            @if (esAdmin)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-soft" asp-controller="Usuario" asp-action="Index">Usuarios</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-soft" asp-controller="Distribuidor" asp-action="Index">Distribuidores</a>
+                                </li>
+                            }
+                        }
                     </ul>
 
-
-                    <!-- Bloque de autenticación (agregado) -->
-                    <div class="d-flex ms-auto align-items-center gap-3">
-                        @if (User.Identity?.IsAuthenticated == true)
+                    <div class="d-flex align-items-center gap-3">
+                        @if (isAuth)
                         {
                             @await Component.InvokeAsync("UserInfo")
-
-                            <a class="btn btn-outline-danger btn-sm" asp-controller="Auth" asp-action="Logout">Cerrar sesión</a>
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Distribuidor" asp-action="Index">Distribuidores</a>
-
+                            <a class="btn btn-outline-light btn-sm px-3" asp-controller="Auth" asp-action="Logout">Cerrar sesión</a>
                         }
                         else
                         {
-                            <a class="btn btn-primary btn-sm" asp-controller="Auth" asp-action="Login">Iniciar sesión</a>
+                            <a class="btn btn-brand btn-sm px-3" asp-controller="Auth" asp-action="Login">Iniciar sesión</a>
                         }
                     </div>
-
-                    <!-- ... -->
-                    <!-- Fin bloque de autenticación -->
                 </div>
             </div>
         </nav>
     </header>
 
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
+    <div class="app-hero"></div>
+    <div class="container-xxl py-4">
+        @RenderSection("PageHeader", required: false)
+
+        <main role="main" class="pb-4">
+            <div class="card glass-card shadow-soft">
+                <div class="card-body p-4 p-md-5">
+                    @RenderBody()
+                </div>
+            </div>
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - ClickMart.web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="app-footer border-0 mt-auto">
+        <div class="container-xxl d-flex flex-column flex-md-row align-items-center justify-content-between gap-2 py-4">
+            <div class="text-muted small">
+                &copy; @DateTime.Now.Year - ClickMart
+            </div>
         </div>
     </footer>
 
@@ -85,17 +233,5 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
-    @section Scripts {
-        <script>
-            setTimeout(() => {
-                document.querySelectorAll('.alert.fade.show')?.forEach(el => {
-                    const alert = bootstrap.Alert.getOrCreateInstance(el);
-                    alert.close();
-                });
-            }, 4000);
-        </script>
-    }
-
 </body>
-
 </html>

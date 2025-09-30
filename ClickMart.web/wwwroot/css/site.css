@@ -1225,3 +1225,104 @@ body {
 }
 
 
+
+
+
+
+
+/*Vista layaout*/
+
+:root{
+  --brand-start: #6a38ff;
+  --brand-end:   #ff4fd8;
+  --ink-900:     #0f172a;
+  --ink-700:     #334155;
+  --surface:     255,255,255; /* canal RGB para usar con alpha */
+  --glass-bg:    rgba(var(--surface), 0.72);
+  --glass-brd:   rgba(255,255,255,0.30);
+  --shadow-soft: 0 12px 40px rgba(2, 6, 23, 0.18);
+}
+
+/* Body */
+.app-body{
+  background:
+    radial-gradient(1200px 600px at -10% -10%, rgba(106,56,255,0.12), transparent 60%),
+    radial-gradient(900px 500px at 110% -10%, rgba(255,79,216,0.10), transparent 55%),
+    linear-gradient(180deg, #f8fafc, #eef2ff 18%, #ffffff 50%, #f8fafc 100%);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Navbar */
+.bg-nav{
+  background: linear-gradient(90deg, var(--brand-start), var(--brand-end));
+}
+.navbar .navbar-brand .brand-dot{
+  width: 14px; height: 14px; border-radius: 50%;
+  display: inline-block; background: #fff; position: relative;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.25);
+}
+.navbar .text-brand-em{ opacity: .9; }
+.nav-link-soft{
+  color: rgba(255,255,255, .85) !important;
+  transition: all .2s ease;
+}
+.nav-link-soft:hover,
+.navbar .dropdown-item:hover{
+  transform: translateY(-1px);
+}
+.navbar .dropdown-menu{
+  border: 0; border-radius: 14px; padding: .5rem; min-width: 220px;
+}
+
+/* Hero sutil bajo el header */
+.app-hero{
+  height: 36px;
+  background: linear-gradient(180deg, rgba(106,56,255,0.15), rgba(255,79,216,0.08), transparent);
+}
+
+/* Tarjeta “glass” para el cuerpo */
+.glass-card{
+  border-radius: 18px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-brd);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Footer */
+.app-footer{
+  background: linear-gradient(180deg, rgba(15,23,42,.02), rgba(15,23,42,.06));
+}
+
+/* Botón de marca */
+.btn-brand{
+  background: #fff;
+  color: #4b2fff;
+  border: 0;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+}
+.btn-brand:hover{
+  filter: brightness(.98);
+  transform: translateY(-1px);
+}
+
+/* Utilidades opcionales */
+.link-light-emphasis{
+  color: #334155;
+}
+.shadow-soft{ box-shadow: var(--shadow-soft) !important; }
+
+/*LOGOOOOOO */
+
+.brand-logo-img {
+    height: 28px; /* sube a 32–36px si quieres más presencia */
+    width: auto;
+    display: block;
+    object-fit: contain;
+}
+
+
+
+
