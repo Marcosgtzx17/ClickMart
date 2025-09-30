@@ -11,5 +11,9 @@ namespace ClickMart.Interfaces
         Task<bool> DeleteAsync(int id);
         Task<bool> UpdateImagenAsync(int idProducto, byte[]? imagen);
         Task<byte[]?> GetImagenAsync(int idProducto);
+
+        Task<int> CountByDistribuidorAsync(int distribuidorId);
+        Task<int> CountByCategoriaAsync(int categoriaId);
+
     }
 }

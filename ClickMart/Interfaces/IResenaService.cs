@@ -10,5 +10,6 @@ namespace ClickMart.Interfaces
         Task<bool> UpdateAsync(int id, ResenaUpdateDTO dto);
         Task<bool> DeleteAsync(int id);
         Task<List<ResenaResponseDTO>> GetByProductoAsync(int productoId);
+        Task<int> CountByUsuarioAsync(int usuarioId);
     }
 }

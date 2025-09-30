@@ -1,5 +1,5 @@
-﻿using ClickMart.web.DTOs.UsuarioDTOs;
-using ClickMart.web.DTOs.RolDTOs;
+﻿using ClickMart.web.DTOs.RolDTOs;
+using ClickMart.web.DTOs.UsuarioDTOs;
 using ClickMart.web.Helpers;
 using ClickMart.web.Services;                  // UsuarioService, RolService, ApiHttpException
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;      // SelectListItem
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ClickMart.web.Controllers
@@ -281,25 +283,63 @@ namespace ClickMart.web.Controllers
             return View(item);
         }
 
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Delete(int id, UsuarioListadoDTO model)
         {
             var token = ClaimsHelper.GetToken(User);
             if (string.IsNullOrWhiteSpace(token)) return RedirectToAction("Login", "Auth");
 
             try
             {
-                var ok = await _svc.DeleteAsync(id, token);
-                if (!ok) TempData["Error"] = "No se pudo eliminar el usuario.";
-                return RedirectToAction(nameof(Index));
+                var ok = await _svc.DeleteAsync(id, token!);
+                TempData[ok ? "Success" : "Error"] = ok
+                    ? "Usuario eliminado."
+                    : "No se pudo eliminar el usuario.";
+                return RedirectToAction("Index");
             }
-            catch (Exception ex)
+            catch (ApiHttpException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
+            {
+                // Igual que Distribuidor/Categoría: alerta UX con detalle
+                ModelState.AddModelError(string.Empty, "El usuario está en uso y no puede eliminarse.");
+
+                int? pedidos = null, resenas = null;
+                var body = ex.GetType().GetProperty("ResponseBody")?.GetValue(ex) as string;
+                TryExtract(body, "pedidos", out pedidos);
+                TryExtract(body, "resenas", out resenas);
+
+                ViewBag.BlockInfo = new
+                {
+                    Message = ex.Message,
+                    Pedidos = pedidos,
+                    Resenas = resenas
+                };
+
+                return View(model);
+            }
+            catch (ApiHttpException ex)
             {
                 TempData["Error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index");
             }
+        }
+
+        // ===== helper json seguro =====
+        private static void TryExtract(string? json, string prop, out int? value)
+        {
+            value = null;
+            if (string.IsNullOrWhiteSpace(json)) return;
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("detalles", out var det) &&
+                    det.TryGetProperty(prop, out var pe) &&
+                    pe.TryGetInt32(out var n))
+                {
+                    value = n;
+                }
+            }
+            catch { /* noop */ }
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using ClickMart.DTOs.ProductoDTOs;
+﻿// ClickMart.Servicios/ProductoService.cs
+using ClickMart.DTOs.ProductoDTOs;
 using ClickMart.Entidades;
 using ClickMart.Interfaces;
 
@@ -73,6 +74,10 @@ namespace ClickMart.Servicios
         public Task<byte[]?> ObtenerImagenAsync(int idProducto) =>
             _repo.GetImagenAsync(idProducto);
 
+        // NUEVO: delega en el repositorio (bye _db)
+        public Task<int> CountByDistribuidorAsync(int distribuidorId)
+            => _repo.CountByDistribuidorAsync(distribuidorId);
+
         private static ProductoResponseDTO ToDto(Productos x) => new()
         {
             ProductoId = x.ProductoId,
@@ -86,5 +91,8 @@ namespace ClickMart.Servicios
             DistribuidorId = x.DistribuidorId,
             TieneImagen = x.Imagen != null && x.Imagen.Length > 0
         };
+        public Task<int> CountByCategoriaAsync(int categoriaId)
+        => _repo.CountByCategoriaAsync(categoriaId);
+
     }
 }

@@ -16,5 +16,6 @@ namespace ClickMart.Interfaces
         Task<bool> MarcarPagadoAsync(int pedidoId);
 
         Task<List<PedidoResponseDTO>> GetByUsuarioAsync(int usuarioId);
+        Task<int> CountByUsuarioAsync(int usuarioId);
     }
 }

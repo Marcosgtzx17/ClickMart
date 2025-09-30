@@ -46,13 +46,21 @@ namespace ClickMart.Repositorios
             return await _ctx.SaveChangesAsync() > 0;
         }
 
-        public async Task<byte[]?> GetImagenAsync(int idProducto)
-        {
-            return await _ctx.Set<Productos>()
+        public async Task<byte[]?> GetImagenAsync(int idProducto) =>
+            await _ctx.Set<Productos>()
+                      .AsNoTracking()
+                      .Where(p => p.ProductoId == idProducto)
+                      .Select(p => p.Imagen)
+                      .FirstOrDefaultAsync();
+
+        // ===== NUEVO: conteo por distribuidor (¡ojo al _ctx y al Set<Productos>!) =====
+        public Task<int> CountByDistribuidorAsync(int distribuidorId) =>
+            _ctx.Set<Productos>()
                 .AsNoTracking()
-                .Where(p => p.ProductoId == idProducto)
-                .Select(p => p.Imagen)
-                .FirstOrDefaultAsync();
-        }
+                .CountAsync(p => p.DistribuidorId == distribuidorId);
+        public Task<int> CountByCategoriaAsync(int categoriaId) =>
+            _ctx.Set<Productos>().AsNoTracking()
+                .CountAsync(p => p.CategoriaId == categoriaId);
+       
     }
 }

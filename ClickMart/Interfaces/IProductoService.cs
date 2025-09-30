@@ -13,5 +13,8 @@ namespace ClickMart.Interfaces
        
         Task<bool> SubirImagenAsync(int idProducto, byte[] bytes);
         Task<byte[]?> ObtenerImagenAsync(int idProducto);
+        Task<int> CountByDistribuidorAsync(int distribuidorId);
+        Task<int> CountByCategoriaAsync(int categoriaId);
+
     }
 }

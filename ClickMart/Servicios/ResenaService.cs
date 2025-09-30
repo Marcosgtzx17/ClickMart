@@ -63,5 +63,8 @@ namespace ClickMart.Servicios
             Comentario = r.Comentario,
             FechaResena = r.FechaResena
         };
+        public Task<int> CountByUsuarioAsync(int usuarioId)
+            => _repo.CountByUsuarioAsync(usuarioId);
     }
 }
+

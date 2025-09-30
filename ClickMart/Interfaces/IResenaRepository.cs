@@ -12,5 +12,6 @@ namespace ClickMart.Interfaces
         Task<Resena> AddAsync(Resena entity);
         Task<bool> UpdateAsync(Resena entity);
         Task<bool> DeleteAsync(int id);
+        Task<int> CountByUsuarioAsync(int usuarioId);
     }
 }

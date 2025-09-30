@@ -1,26 +1,84 @@
 ﻿@model ClickMart.web.DTOs.DistribuidorDTOs.DistribuidorResponseDTO
 @{
     ViewData["Title"] = "Eliminar distribuidor";
+    var block = ViewBag.BlockInfo as dynamic; // { Message, Productos }
 }
 
-<h2>Eliminar distribuidor</h2>
+<h2 class="mb-3">Eliminar distribuidor</h2>
 
-<div class="alert alert-warning">
-    ¿Seguro que deseas eliminar <strong>@Model.Nombre</strong>? Esta acción no se puede deshacer.
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @ok
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger d-flex align-items-start" role="alert">
+        <div class="me-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                 class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
+                <path d="M7.938 2.016a.13.13 0 0 1 .125 0l6.857 3.94c.11.063.18.18.18.309v7.369a.36.36 0 0 1-.18.309l-6.857 3.94a.13.13 0 0 1-.125 0l-6.857-3.94A.36.36 0 0 1 1 13.634V6.265a.36.36 0 0 1 .18-.309l6.857-3.94z" />
+                <path d="M7.002 11a1 1 0 1 0 2.002 0 1 1 0 0 0-2.002 0zM7.1 5.995a.905.905 0 1 1 1.81 0l-.35 2.81a.555.555 0 1 1-1.11 0l-.35-2.81z" />
+            </svg>
+        </div>
+        <div>
+            <h5 class="alert-heading mb-1">No se puede eliminar</h5>
+            <p class="mb-2">
+                @Html.ValidationSummary(excludePropertyErrors: true)
+            </p>
+
+            @if (block != null)
+            {
+                <div class="small text-muted">
+                    @block.Message
+                    @if (block.Productos != null)
+                    {
+                        <div class="mt-2">
+                            <span class="badge bg-warning text-dark">
+                                Productos vinculados: @block.Productos
+                            </span>
+                            <a class="btn btn-sm btn-outline-primary ms-2"
+                               asp-controller="Producto" asp-action="Index"
+                               asp-route-distribuidorId="@Model.DistribuidorId">
+                                Ver productos
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <p class="text-muted mb-3">
+            Estás a punto de eliminar al distribuidor:
+        </p>
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Nombre</dt>
+            <dd class="col-sm-9 fw-semibold">@Model.Nombre</dd>
+
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.Gmail</dd>
+
+            <dt class="col-sm-3">Teléfono</dt>
+            <dd class="col-sm-9">@Model.Telefono</dd>
+
+            <dt class="col-sm-3">Fecha registro</dt>
+            <dd class="col-sm-9">@Model.FechaRegistro.ToString("yyyy-MM-dd")</dd>
+        </dl>
+    </div>
 </div>
 
-<dl class="row">
-    <dt class="col-sm-3">Email</dt>
-    <dd class="col-sm-9">@Model.Gmail</dd>
-    <dt class="col-sm-3">Teléfono</dt>
-    <dd class="col-sm-9">@Model.Telefono</dd>
-    <dt class="col-sm-3">Fecha registro</dt>
-    <dd class="col-sm-9">@Model.FechaRegistro.ToString("yyyy-MM-dd")</dd>
-</dl>
-
-<form asp-action="Delete" method="post">
+<form asp-action="Delete" method="post" class="d-flex gap-2">
     @Html.AntiForgeryToken()
     <input type="hidden" name="id" value="@Model.DistribuidorId" />
-    <button type="submit" class="btn btn-danger">Sí, borrar</button>
+    <button type="submit" class="btn btn-danger">
+        Sí, borrar
+    </button>
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>

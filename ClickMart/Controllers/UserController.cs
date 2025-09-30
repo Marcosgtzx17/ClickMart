@@ -2,6 +2,7 @@
 using ClickMart.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClickMart.Api.Controllers
 {
@@ -13,10 +14,20 @@ namespace ClickMart.Api.Controllers
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IUsuarioService _svc;
 
-        public UserController(IUsuarioService svc, IUsuarioRepository usuarioRepository)
+        // Opcional: si tienes servicios para contar referencias
+        private readonly IPedidoService? _pedidos;     // <- inyecta si existe
+        private readonly IResenaService? _resenas;     // <- inyecta si existe
+
+        public UserController(
+            IUsuarioService svc,
+            IUsuarioRepository usuarioRepository,
+            IPedidoService? pedidos = null,
+            IResenaService? resenas = null)
         {
             _svc = svc;
             _usuarioRepository = usuarioRepository;
+            _pedidos = pedidos;
+            _resenas = resenas;
         }
 
         /// <summary>Listado de usuarios (requiere rol/token)</summary>
@@ -27,6 +38,7 @@ namespace ClickMart.Api.Controllers
             var usuarios = await _usuarioRepository.GetAllUsuariosAsync();
             return Ok(usuarios);
         }
+
         // POST /api/user  (crear usuario con rol elegido)
         [HttpPost]
         [ProducesResponseType(typeof(UsuarioListadoDTO), StatusCodes.Status201Created)]
@@ -61,18 +73,60 @@ namespace ClickMart.Api.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Update(int id, [FromBody] UsuarioUpdateDTO dto)
         {
-            var ok = await _svc.UpdateAsync(id, dto);
-            return ok ? NoContent() : NotFound();
+            try
+            {
+                var ok = await _svc.UpdateAsync(id, dto);
+                return ok ? NoContent() : NotFound();
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("email", StringComparison.OrdinalIgnoreCase))
+            {
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         // DELETE /api/user/{id}
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Delete(int id)
         {
-            var ok = await _svc.DeleteAsync(id);
-            return ok ? NoContent() : NotFound();
+            var user = await _svc.GetByIdAsync(id);
+            if (user is null) return NotFound();
+
+            // 1) Bloqueo proactivo: cuenta referencias antes de intentar borrar
+            var pedidos = _pedidos is null ? 0 : await _pedidos.CountByUsuarioAsync(id);   // implementa en tu service/repo
+            var resenas = _resenas is null ? 0 : await _resenas.CountByUsuarioAsync(id);   // opcional
+
+            if ((pedidos + resenas) > 0)
+            {
+                return Conflict(new
+                {
+                    message = "No se puede eliminar el usuario porque tiene referencias.",
+                    detalles = new
+                    {
+                        pedidos,
+                        resenas
+                    },
+                    sugerencia = "Transfiere o elimina las referencias antes de eliminar al usuario."
+                });
+            }
+
+            // 2) Fallback: por si otra FK truena al borrar
+            try
+            {
+                var ok = await _svc.DeleteAsync(id);
+                return ok ? NoContent() : NotFound();
+            }
+            catch (DbUpdateException dbex)
+            {
+                return Conflict(new
+                {
+                    message = "No se puede eliminar el usuario debido a referencias existentes.",
+                    detalles = new { pedidos, resenas },
+                    error = dbex.InnerException?.Message ?? dbex.Message
+                });
+            }
         }
     }
 }

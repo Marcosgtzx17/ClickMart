@@ -45,5 +45,11 @@ namespace ClickMart.Repositorios
             _ctx.Set<Resena>().Remove(existing);
             return await _ctx.SaveChangesAsync() > 0;
         }
+        public Task<int> CountByUsuarioAsync(int usuarioId)
+        {
+            return _ctx.Set<Resena>()
+                       .AsNoTracking()
+                       .CountAsync(r => r.UsuarioId == usuarioId);
+        }
     }
 }

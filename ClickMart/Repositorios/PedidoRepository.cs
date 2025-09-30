@@ -49,5 +49,11 @@ namespace ClickMart.Repositorios
                 .OrderByDescending(p => p.Fecha)
                 .ToListAsync();
         }
+        public Task<int> CountByUsuarioAsync(int usuarioId)
+        {
+            return _ctx.Set<Pedido>()
+                       .AsNoTracking()
+                       .CountAsync(p => p.UsuarioId == usuarioId);
+        }
     }
 }

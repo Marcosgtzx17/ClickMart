@@ -1,8 +1,11 @@
-﻿using ClickMart.web.DTOs.CategoriaDTOs;
-using ClickMart.web.Helpers;
-using ClickMart.web.Services;
+﻿using System.Net;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
+using ClickMart.web.DTOs.CategoriaDTOs;
+using ClickMart.web.Helpers;
+using ClickMart.web.Services;
 
 namespace ClickMart.web.Controllers
 {
@@ -108,22 +111,62 @@ namespace ClickMart.web.Controllers
             return View(item);
         }
 
-        [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken]
         [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Delete(int id, CategoriaResponseDTO model)
         {
             var token = ClaimsHelper.GetToken(User);
+            if (string.IsNullOrWhiteSpace(token)) return RedirectToAction("Login", "Auth");
+
             try
             {
-                var ok = await _svc.DeleteAsync(id, token);
-                if (!ok) TempData["Error"] = "No se pudo eliminar la categoría.";
+                var ok = await _svc.DeleteAsync(id, token!);
+                TempData[ok ? "Success" : "Error"] = ok
+                    ? "Categoría eliminada."
+                    : "No se pudo eliminar la categoría.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+            catch (ApiHttpException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
+            {
+                // Re-render con alerta bonita (igual que Distribuidor)
+                ModelState.AddModelError(string.Empty, "La categoría está en uso y no puede eliminarse.");
+
+                // Intentar leer conteo de productos vinculados desde el body JSON del error (si existe)
+                var body = ex.GetType().GetProperty("ResponseBody")?.GetValue(ex) as string; // reflection-safe
+                int? productos = TryExtractProductos(body);
+
+                ViewBag.BlockInfo = new
+                {
+                    Message = ex.Message, // texto del backend (o pon un copy propio)
+                    Productos = productos
+                };
+
+                return View(model);
+            }
+            catch (ApiHttpException ex)
             {
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
+        }
+
+        // === Helpers ===
+        private static int? TryExtractProductos(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return null;
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                // esperamos un shape como: { message, detalles: { productos: N } }
+                if (doc.RootElement.TryGetProperty("detalles", out var det) &&
+                    det.TryGetProperty("productos", out var prod) &&
+                    prod.TryGetInt32(out var n))
+                {
+                    return n;
+                }
+            }
+            catch { /* no-op: UX sigue mostrando el alert sin conteo */ }
+            return null;
         }
     }
 }

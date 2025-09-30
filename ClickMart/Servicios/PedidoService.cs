@@ -128,5 +128,7 @@ namespace ClickMart.Servicios
             var items = await _repo.GetByUsuarioAsync(usuarioId);
             return items.Select(ToDto).ToList();
         }
+        public Task<int> CountByUsuarioAsync(int usuarioId)
+    => _repo.CountByUsuarioAsync(usuarioId);
     }
 }
