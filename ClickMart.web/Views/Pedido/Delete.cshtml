@@ -3,7 +3,7 @@
     ViewData["Title"] = "Eliminar pedido";
 }
 
-<!-- HERO -->
+<!-- HERO consistente -->
 <div class="store-hero mb-4 d-flex justify-content-between align-items-center">
     <div>
         <h1 class="store-title mb-1">Eliminar pedido</h1>
@@ -12,8 +12,10 @@
     <a asp-action="Index" class="btn btn-primary btn-lg">Volver al listado</a>
 </div>
 
+<!-- Card principal -->
 <div class="card shadow-sm border-0 rounded-4 p-3 p-md-4">
-    <!-- Callout de confirmación -->
+
+    <!-- Callout de confirmación (estilizado) -->
     <div class="rounded-4 p-3 p-md-4 mb-4 d-flex align-items-start gap-3"
          style="background:#fffaf0;border:1px solid #fde68a;box-shadow:0 10px 25px rgba(2,6,23,.05);">
         <div class="d-flex align-items-center justify-content-center rounded-circle"
@@ -26,15 +28,16 @@
         </div>
     </div>
 
-    <!-- Resumen en grid -->
+    <!-- Chip con ID para consistencia visual -->
+    <div class="mb-3">
+        <span class="chip-id">#@Model.PedidoId</span>
+    </div>
+
+    <!-- Resumen en grid (mismos estilos que categoría/producto) -->
     <div class="detail-grid-cat">
         <div class="detail-item-cat">
-            <div class="label-cat">Pedido</div>
-            <div class="value-cat fw-medium">#@Model.PedidoId</div>
-        </div>
-        <div class="detail-item-cat">
             <div class="label-cat">Usuario</div>
-            <div class="value-cat">@Model.UsuarioId</div>
+            <div class="value-cat fw-medium">@Model.UsuarioId</div>
         </div>
         <div class="detail-item-cat">
             <div class="label-cat">Total</div>
@@ -50,7 +53,8 @@
         </div>
     </div>
 
-    <form asp-action="DeleteConfirmed" method="post" class="mt-4">
+    <!-- Acciones -->
+    <form asp-action="Delete" method="post" class="mt-4">
         @Html.AntiForgeryToken()
         <input type="hidden" name="id" value="@Model.PedidoId" />
         <div class="form-actions">

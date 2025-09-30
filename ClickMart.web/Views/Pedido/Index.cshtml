@@ -1,15 +1,13 @@
-﻿
-@model List<ClickMart.web.DTOs.PedidoDTOs.PedidoResponseDTO>
+﻿@model List<ClickMart.web.DTOs.PedidoDTOs.PedidoResponseDTO>
 @{
     ViewData["Title"] = "Pedidos";
 }
 
-<!-- HERO igual a Productos (sin la barra extra) -->
+<!-- HERO igual a Productos -->
 <div class="store-hero mb-4 d-flex justify-content-between align-items-center">
     <div>
         <h1 class="store-title mb-1">Pedidos</h1>
         <p class="store-subtitle mb-0">Gestión de órdenes del catálogo ClickMart</p>
-        @* <div style="width:72px;height:4px;background:var(--bs-primary);border-radius:4px;"></div>  <-- Eliminado *@
     </div>
     <a asp-action="Create" class="btn btn-primary btn-lg">Nuevo pedido</a>
 </div>
@@ -29,72 +27,116 @@
 }
 else
 {
-    <div class="card shadow-sm border-0 rounded-4">
+    <!-- ===== Vista de TARJETA (solo móviles) ===== -->
+    <div class="d-block d-md-none">
+        <div class="d-grid gap-3">
+            @{
+                var i = 1;
+            }
+            @foreach (var p in Model)
+            {
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="chip-id">#@i</span>
+                            <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border">
+                                @p.PagoEstado
+                            </span>
+                        </div>
+
+                        <div class="detail-grid-cat">
+                            <div class="detail-item-cat">
+                                <div class="label-cat">Pedido</div>
+                                <div class="value-cat fw-medium">#@p.PedidoId</div>
+                            </div>
+                            <div class="detail-item-cat">
+                                <div class="label-cat">Usuario</div>
+                                <div class="value-cat">Usuario @p.UsuarioId</div>
+                            </div>
+                            <div class="detail-item-cat">
+                                <div class="label-cat">Total</div>
+                                <div class="value-cat">@((p.Total ?? 0m).ToString("C"))</div>
+                            </div>
+                            <div class="detail-item-cat">
+                                <div class="label-cat">Fecha</div>
+                                <div class="value-cat">@p.Fecha.ToString("yyyy-MM-dd")</div>
+                            </div>
+                            <div class="detail-item-cat">
+                                <div class="label-cat">Método</div>
+                                <div class="value-cat">@p.MetodoPago</div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-3">
+                            <a asp-action="Details" asp-route-id="@p.PedidoId" class="btn btn-outline-info btn-action">Detalles</a>
+                            <a asp-action="Edit" asp-route-id="@p.PedidoId" class="btn btn-outline-secondary btn-action">Editar</a>
+                            <a asp-action="Delete" asp-route-id="@p.PedidoId" class="btn btn-outline-danger btn-action">Borrar</a>
+                            <a asp-action="Factura" asp-route-id="@p.PedidoId" class="btn btn-outline-danger btn-action" target="_blank" rel="noopener">Factura</a>
+                        </div>
+                    </div>
+                </div>
+                i++;
+            }
+        </div>
+    </div>
+
+    <!-- ===== Vista de TABLA (md y superiores) ===== -->
+    <div class="card shadow-sm border-0 rounded-4 d-none d-md-block">
         <div class="card-body p-0">
-            <table class="table table-hover table-striped align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:90px">#</th>
-                        <th>Usuario</th>
-                        <th style="width:160px">Total</th>
-                        <th style="width:160px">Fecha</th>
-                        <th style="width:150px">Método</th>
-                        <th style="width:150px">Pago</th>
-                        <th class="text-end" style="width:360px">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{
-                        var i = 1;
-                    }
-                    @foreach (var p in Model)
-                    {
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <td>
-                                <span class="badge rounded-pill bg-info-subtle text-info-emphasis border">#@i</span>
-                            </td>
-                            <td class="fw-semibold">Usuario @p.UsuarioId</td>
-
-                            <td>
-                                <span class="badge rounded-pill bg-info-subtle text-info-emphasis border">
-                                    @(p.Total?.ToString("C") ?? "-")
-                                </span>
-                            </td>
-
-                            <!-- FECHA: solo fecha, sin hora -->
-                            <td>@p.Fecha.ToString("yyyy-MM-dd")</td>
-
-                            <td>
-                                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border">
-                                    @p.MetodoPago
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border">
-                                    @p.PagoEstado
-                                </span>
-                            </td>
-
-                            <td class="text-end">
-                                <div class="btn-group btn-group-sm" role="group" aria-label="Acciones pedido">
-                                    <a asp-action="Details" asp-route-id="@p.PedidoId" class="btn btn-outline-info">Detalles</a>
-                                    <a asp-action="Edit" asp-route-id="@p.PedidoId" class="btn btn-outline-secondary">Editar</a>
-                                    <a asp-action="Delete" asp-route-id="@p.PedidoId" class="btn btn-outline-danger">Borrar</a>
-                                    <!-- NUEVO: Botón Factura en el listado -->
-                                    <a asp-action="Factura"
-                                       asp-route-id="@p.PedidoId"
-                                       class="btn btn-sm btn-outline-danger"
-                                       target="_blank" rel="noopener">
-                                        Factura
-                                    </a>
-                                </div>
-                            </td>
+                            <th style="width:90px">#</th>
+                            <th>Usuario</th>
+                            <th style="width:160px">Total</th>
+                            <th style="width:160px">Fecha</th>
+                            <th style="width:150px">Método</th>
+                            <th style="width:150px">Pago</th>
+                            <th class="text-end" style="width:360px">Acciones</th>
                         </tr>
-                        i++;
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @{
+                            var i = 1;
+                        }
+                        @foreach (var p in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge rounded-pill bg-info-subtle text-info-emphasis border">#@i</span>
+                                </td>
+                                <td class="fw-semibold">Usuario @p.UsuarioId</td>
+                                <td>
+                                    <span class="badge rounded-pill bg-info-subtle text-info-emphasis border">
+                                        @(p.Total?.ToString("C") ?? "-")
+                                    </span>
+                                </td>
+                                <td>@p.Fecha.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border">
+                                        @p.MetodoPago
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border">
+                                        @p.PagoEstado
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm flex-wrap" role="group" aria-label="Acciones pedido">
+                                        <a asp-action="Details" asp-route-id="@p.PedidoId" class="btn btn-outline-info">Detalles</a>
+                                        <a asp-action="Edit" asp-route-id="@p.PedidoId" class="btn btn-outline-secondary">Editar</a>
+                                        <a asp-action="Delete" asp-route-id="@p.PedidoId" class="btn btn-outline-danger">Borrar</a>
+                                        <a asp-action="Factura" asp-route-id="@p.PedidoId" class="btn btn-sm btn-outline-danger" target="_blank" rel="noopener">Factura</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 }
