@@ -11,7 +11,7 @@ builder.Services.AddHttpContextAccessor();
 
 // ===== HttpClient "Api" (usa ApiBaseUrl de appsettings.json) =====
 // Ejemplo appsettings.json (MVC):
-// { "ApiBaseUrl": "https://localhost:7069/api/" }
+//{ "ApiBaseUrl": "https://localhost:7069/api/" }
 builder.Services.AddHttpClient("Api", c =>
 {
     var baseUrl = builder.Configuration["ApiBaseUrl"];
