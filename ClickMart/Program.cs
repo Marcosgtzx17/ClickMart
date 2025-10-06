@@ -3,6 +3,7 @@ using ClickMart.Repositorios;
 using ClickMart.Servicios;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;   // ✅ NUEVO: para X-Forwarded-*
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -125,16 +126,48 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
 
+// ======================= Swagger toggle (Prod seguro) =======================
+// Activa Swagger si estás en Dev O si defines ENABLE_SWAGGER=true en env vars.
+var enableSwagger = app.Configuration.GetValue<bool>("ENABLE_SWAGGER") || app.Environment.IsDevelopment();
+if (enableSwagger)
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ClickMart API v1");
+        c.RoutePrefix = "docs";    // ✅ Swagger en /docs
+    });
+}
+
+// ======================= Proxy headers (Render) =======================
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
+});
+
 // ======================= Pipeline =======================
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();   // ver stack en el navegador si algo rompe
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
+    app.UseHttpsRedirection();     // ✅ Solo en Dev (evita warning detrás de proxy TLS)
 }
 
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ===== Endpoints =====
 app.MapControllers();
+
+// ✅ Root 200 (adiós 404 en "/")
+app.MapGet("/", () => Results.Json(new
+{
+    service = "ClickMart API",
+    status = "ok",
+    docs = "/docs",
+    health = "/health"
+})).AllowAnonymous();
+
+// ✅ Health check simple
+app.MapGet("/health", () => Results.Ok("OK")).AllowAnonymous();
+
 app.Run();
