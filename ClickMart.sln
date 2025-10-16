@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClickMart", "ClickMart\Clic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClickMart.web", "ClickMart.web\ClickMart.web.csproj", "{8AC2B2BD-5235-49E4-BF0C-CA58D02C56EC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClickMart.TestXunit", "ClickMart.TestXunit\ClickMart.TestXunit.csproj", "{A2F3E9B9-93D5-48D2-A16E-5A7012B4AF09}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{8AC2B2BD-5235-49E4-BF0C-CA58D02C56EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8AC2B2BD-5235-49E4-BF0C-CA58D02C56EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8AC2B2BD-5235-49E4-BF0C-CA58D02C56EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2F3E9B9-93D5-48D2-A16E-5A7012B4AF09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2F3E9B9-93D5-48D2-A16E-5A7012B4AF09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2F3E9B9-93D5-48D2-A16E-5A7012B4AF09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2F3E9B9-93D5-48D2-A16E-5A7012B4AF09}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

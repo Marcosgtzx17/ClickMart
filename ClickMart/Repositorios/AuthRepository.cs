@@ -19,9 +19,37 @@ namespace ClickMart.Repositorios
             _config = config;
         }
 
+        // ===== Validaciones requeridas para HU-1003 y HU-1006 =====
+        private static void ValidarRegistro(UsuarioRegistroDTO dto)
+        {
+            if (dto is null) throw new ArgumentNullException(nameof(dto));
+            if (string.IsNullOrWhiteSpace(dto.Nombre) ||
+                string.IsNullOrWhiteSpace(dto.Direccion) ||
+                string.IsNullOrWhiteSpace(dto.Telefono) ||
+                string.IsNullOrWhiteSpace(dto.Email) ||
+                string.IsNullOrWhiteSpace(dto.Password))
+            {
+                throw new ArgumentException("Complete todos los campos obligatorios");
+            }
+        }
+
+        private static void ValidarLogin(UsuarioLoginDTO dto)
+        {
+            if (dto is null) throw new ArgumentNullException(nameof(dto));
+            if (string.IsNullOrWhiteSpace(dto.Email) ||
+                string.IsNullOrWhiteSpace(dto.Password))
+            {
+                throw new ArgumentException("Complete todos los campos obligatorios");
+            }
+        }
+        // ==========================================================
+
         public async Task<UsuarioRespuestaDTO?> RegistrarAsync(UsuarioRegistroDTO dto)
         {
-            // 1) Email único
+            // Validación de campos obligatorios (HU-1003)
+            ValidarRegistro(dto);
+
+            // 1) Email único (HU-1002)
             var existing = await _usuarioRepo.GetByEmailAsync(dto.Email);
             if (existing != null) return null; // o devuelve Conflict
 
@@ -60,10 +88,13 @@ namespace ClickMart.Repositorios
 
         public async Task<UsuarioRespuestaDTO?> LoginAsync(UsuarioLoginDTO dto)
         {
+            // Validación de campos obligatorios (HU-1006)
+            ValidarLogin(dto);
+
             var usuario = await _usuarioRepo.GetByEmailAsync(dto.Email);
             if (usuario == null) return null;
 
-            // Comparar password texto vs hash almacenado
+            // Comparar password texto vs hash almacenado (HU-1005)
             if (!BCrypt.Net.BCrypt.Verify(dto.Password, usuario.PasswordHash))
                 return null;
 

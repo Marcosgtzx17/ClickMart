@@ -14,5 +14,6 @@ namespace ClickMart.Interfaces
         Task<bool> DeleteAsync(int id);
         Task<int> CountByUsuarioAsync(int usuarioId);
         Task<int> CountByProductoAsync(int productoId);
+        Task<bool> DeleteOwnAsync(int id, int usuarioId);
     }
 }

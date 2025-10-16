@@ -3,12 +3,12 @@ using ClickMart.Repositorios;
 using ClickMart.Servicios;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.HttpOverrides;   // ✅ NUEVO: para X-Forwarded-*
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using QuestPDF.Infrastructure;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -114,7 +114,7 @@ builder.Services.AddSwaggerGen(c =>
         var ctrl = api.ActionDescriptor.RouteValues.TryGetValue("controller", out var cName) ? cName : "Controller";
         var act = api.ActionDescriptor.RouteValues.TryGetValue("action", out var aName) ? aName : "Action";
         var verb = api.HttpMethod ?? "HTTP";
-        return $"{ctrl}_{act}_{verb}";
+        return $"{ctrl}{act}{verb}";
     });
 
     // 🔧 3) Si hubiese dos acciones con misma ruta/verbo, prioriza la primera
@@ -126,48 +126,16 @@ QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
 
-// ======================= Swagger toggle (Prod seguro) =======================
-// Activa Swagger si estás en Dev O si defines ENABLE_SWAGGER=true en env vars.
-var enableSwagger = app.Configuration.GetValue<bool>("ENABLE_SWAGGER") || app.Environment.IsDevelopment();
-if (enableSwagger)
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ClickMart API v1");
-        c.RoutePrefix = "docs";    // ✅ Swagger en /docs
-    });
-}
-
-// ======================= Proxy headers (Render) =======================
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
-});
-
 // ======================= Pipeline =======================
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
-    app.UseHttpsRedirection();     // ✅ Solo en Dev (evita warning detrás de proxy TLS)
+    app.UseDeveloperExceptionPage();   // ver stack en el navegador si algo rompe
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-
-// ===== Endpoints =====
 app.MapControllers();
-
-// ✅ Root 200 (adiós 404 en "/")
-app.MapGet("/", () => Results.Json(new
-{
-    service = "ClickMart API",
-    status = "ok",
-    docs = "/docs",
-    health = "/health"
-})).AllowAnonymous();
-
-// ✅ Health check simple
-app.MapGet("/health", () => Results.Ok("OK")).AllowAnonymous();
-
 app.Run();
