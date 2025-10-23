@@ -79,13 +79,9 @@
                                     <a class="btn btn-sm btn-outline-secondary btn-action"
                                        asp-action="Edit" asp-route-id="@r.ResenaId">Editar</a>
 
-                                    <form asp-action="Delete" asp-route-id="@r.ResenaId" method="post" class="m-0">
-                                        <button type="submit"
-                                                class="btn btn-sm btn-outline-danger btn-action"
-                                                onclick="return confirm('¿Eliminar reseña?');">
-                                            Eliminar
-                                        </button>
-                                    </form>
+                                    <!-- Enlace GET a la vista Delete (sin confirm y sin POST aquí) -->
+                                    <a class="btn btn-sm btn-outline-danger btn-action"
+                                       asp-action="Delete" asp-route-id="@r.ResenaId">Eliminar</a>
                                 </div>
                             </td>
                         </tr>

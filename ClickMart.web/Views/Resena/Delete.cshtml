@@ -39,6 +39,7 @@
     </div>
 
     <form asp-action="Delete" method="post" class="mt-2">
+        @Html.AntiForgeryToken()
         <input type="hidden" name="id" value="@Model.ResenaId" />
         <div class="form-actions">
             <a asp-action="Index" class="btn btn-outline-secondary btn-action">Cancelar</a>

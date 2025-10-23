@@ -204,9 +204,28 @@ namespace ClickMart.web.Controllers
             }
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        // ====== ELIMINAR ======
+        // GET: /Resena/Delete/{id}  -> Muestra la vista de confirmación
+        [HttpGet]
         public async Task<IActionResult> Delete(int id)
+        {
+            var token = ClaimsHelper.GetToken(User);
+            var data = await _svc.GetByIdAsync(id, token);
+
+            if (data is null)
+            {
+                TempData["Error"] = "Reseña no encontrada.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // La vista Delete.cshtml espera ResenaResponseDTO como modelo
+            return View(data);
+        }
+
+        // POST: /Resena/Delete  -> Ejecuta la eliminación
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var token = ClaimsHelper.GetToken(User);
             try
@@ -219,6 +238,7 @@ namespace ClickMart.web.Controllers
             {
                 TempData["Error"] = ex.Message;
             }
+
             return RedirectToAction(nameof(Index));
         }
     }
