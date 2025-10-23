@@ -32,6 +32,16 @@
             </div>
             <button class="btn btn-success" type="submit">Crear cuenta</button>
             <div class="text-danger mt-2">@ViewBag.Error</div>
+            @{
+                var msg = ViewBag.Error as string;
+            }
+            @if (!string.IsNullOrWhiteSpace(msg))
+            {
+                <div id="validation-required" class="alert alert-warning" role="alert">
+                    @msg
+                </div>
+            }
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
         </form>
     </div>
 </div>
