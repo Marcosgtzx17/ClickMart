@@ -9,7 +9,6 @@ using Microsoft.OpenApi.Models;
 using QuestPDF.Infrastructure;
 using System.Text;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // ======================= EF Core =======================
@@ -18,7 +17,6 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
     var cs = builder.Configuration.GetConnectionString("Conn");
     options.UseMySql(cs, ServerVersion.AutoDetect(cs));
     options.EnableDetailedErrors();
-    // options.EnableSensitiveDataLogging();
 });
 
 // ======================= DI =======================
@@ -81,6 +79,7 @@ builder.Services.AddAuthorization(options =>
 // ======================= Controllers + Swagger =======================
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "ClickMart API", Version = "v1" });
@@ -94,6 +93,7 @@ builder.Services.AddSwaggerGen(c =>
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -105,10 +105,10 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
-    // 🔧 1) Esquemas únicos por nombre completo (evita CreateDTO duplicados)
+    // 🔧 1) Esquemas únicos
     c.CustomSchemaIds(t => (t.FullName ?? t.Name).Replace('+', '_'));
 
-    // 🔧 2) OperationId único por controller/acción/verbo (evita colisiones)
+    // 🔧 2) OperationId único
     c.CustomOperationIds(api =>
     {
         var ctrl = api.ActionDescriptor.RouteValues.TryGetValue("controller", out var cName) ? cName : "Controller";
@@ -117,7 +117,7 @@ builder.Services.AddSwaggerGen(c =>
         return $"{ctrl}{act}{verb}";
     });
 
-    // 🔧 3) Si hubiese dos acciones con misma ruta/verbo, prioriza la primera
+    // 🔧 3) Resolver conflictos de rutas
     c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
 });
 
@@ -127,15 +127,22 @@ QuestPDF.Settings.License = LicenseType.Community;
 var app = builder.Build();
 
 // ======================= Pipeline =======================
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();   // ver stack en el navegador si algo rompe
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
+// Swagger habilitado SIEMPRE
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ClickMart API v1");
+    c.RoutePrefix = "swagger"; // opcional: URL será /swagger
+});
+
+// Seguridad, HTTPS, Auth
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Controllers
 app.MapControllers();
+
+// 🔚 Run app
 app.Run();
